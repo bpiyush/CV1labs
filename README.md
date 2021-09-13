@@ -17,5 +17,6 @@ unzip photometric_images.zip
    conda create -n cv1labs
    conda activate cv1labs
    conda install python=3.9
-   conda install numpy ipdb
+   conda install numpy ipdb jupyterlab
+   pip install opencv-python
    ```
