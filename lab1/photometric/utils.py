@@ -129,3 +129,17 @@ def show_results(albedo, normals, height_map, SE):
     ax.plot_surface(X,Y, H.T)
     plt.show()
 
+
+def convert_polar_to_cartesian(theta: np.ndarray, phi: np.ndarray, convert_to_rad=False):
+    """Converts (theta, phi) in polar coordinates to cartesian coordinates"""
+    # convert in radians
+    if convert_to_rad:
+        theta = (np.pi * theta) / 180.0
+        phi = (np.pi * phi) / 180.0
+
+    # compute x, y, z
+    z = np.cos(theta)
+    x = np.sin(theta) * np.cos(phi)
+    y = np.sin(theta) * np.sin(phi)
+
+    return np.array([x, y, z]).T
