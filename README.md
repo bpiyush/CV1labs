@@ -12,3 +12,10 @@ Code for lab assignments for Computer Vision 1 (UvA)
 cd lab1/photometric/
 unzip photometric_images.zip
 ```
+3. Managing dependencies: you can use `conda` or `virtualenv` - whatever floats your boat. I use `conda` (on Mac M1 ARM arch) and instructions for the same are as follows:
+   ```bash
+   conda create -n cv1labs
+   conda activate cv1labs
+   conda install python=3.9
+   conda install numpy ipdb
+   ```
