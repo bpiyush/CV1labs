@@ -4,6 +4,7 @@ import glob
 import cv2
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
+from typing import List
 
 def load_syn_images(image_dir='./SphereGray5/', channel=0):
     files = os.listdir(image_dir)
