@@ -143,3 +143,52 @@ def convert_polar_to_cartesian(theta: np.ndarray, phi: np.ndarray, convert_to_ra
     y = np.sin(theta) * np.sin(phi)
 
     return np.array([x, y, z]).T
+
+
+def show_single_image(img: np.ndarray, figsize=(8, 8), ax=None, show=True, grayscale=False):
+    """Displays a single image."""
+    if ax is None:
+        fig, ax = plt.subplots(1, 1, figsize=figsize)
+    
+    args = {"X": img}
+    if grayscale:
+        args["cmap"] = "gray"
+
+    ax.imshow(**args)
+    
+    if show:
+        plt.show()
+
+
+def show_multiple_images(
+        imgs: List[np.ndarray], grid: tuple = None, figsize=(8, 8), ax=None, grayscale=False, show=False
+    ):
+    """Displays a set of images based on given grid pattern."""
+    assert isinstance(imgs, list)
+    assert isinstance(grid, tuple) and len(grid) == 2
+
+    num_imgs = len(imgs)
+    if grid is None:
+        grid = (1, num_imgs)
+
+    if ax is None:
+        fig, ax = plt.subplots(1, 1, figsize=figsize)
+    
+    grid_imgs = [[None for _ in range(grid[1])] for _ in range(grid[0])]
+    for i in range(grid[0]):
+        for j in range(grid[1]):
+            grid_imgs[i][j] = imgs[i * j + j]
+
+    disp_imgs = []
+    for i in range(grid[0]):
+        disp_imgs.append(np.hstack(grid_imgs[i]))
+    disp_imgs = np.vstack(disp_imgs)
+    
+    args = {"X": disp_imgs}
+    if grayscale:
+        args["cmap"] = "gray"
+
+    ax.imshow(**args)
+
+    if show:
+        plt.show()
