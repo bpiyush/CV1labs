@@ -36,26 +36,19 @@ def gray_world(img: np.ndarray):
     return new_img
 
 
-def grey_world_aliter(nimg):
-    nimg = nimg.transpose(2, 0, 1).astype(np.uint32)
-    mu_g = np.average(nimg[1])
-    nimg[0] = np.minimum(nimg[0]*(mu_g/np.average(nimg[0])),255)
-    nimg[2] = np.minimum(nimg[2]*(mu_g/np.average(nimg[2])),255)
-    return  nimg.transpose(1, 2, 0).astype(np.uint8)
-
-
 if __name__ == "__main__":
-    # img = np.zeros((512, 512, 3))
-    # new_img = gray_world(img)
+    img = np.zeros((512, 512, 3))
+    new_img = gray_world(img)
+    assert new_img.shape == (512, 512, 3)
 
-    # test on given sample image
+    # load input image
     img = cv2.imread("awb.jpg")
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    show_single_image(img)
+    plt.imshow(img)
+    plt.show()
 
+    # run the algo for this image
     new_img = gray_world(img)
-    show_single_image(new_img)
-
-    new_img = grey_world_aliter(img)
-    show_single_image(new_img)
+    plt.imshow(new_img)
+    plt.show()
 
