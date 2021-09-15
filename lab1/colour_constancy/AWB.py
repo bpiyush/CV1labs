@@ -4,10 +4,6 @@ import numpy as np
 import cv2
 import matplotlib.pyplot as plt
 
-import sys
-sys.path.append("../")
-from photometric.utils import show_single_image, show_multiple_images
-
 
 def gray_world(img: np.ndarray) -> np.ndarray:
     """Applies gray-world algo to an image to filter it of color artefacts.
