@@ -9,7 +9,7 @@ sys.path.append("../")
 from photometric.utils import show_single_image, show_multiple_images
 
 
-def gray_world(img: np.ndarray):
+def gray_world(img: np.ndarray) -> np.ndarray:
     """Applies gray-world algo to an image to filter it of color artefacts.
 
     Args:
@@ -17,16 +17,21 @@ def gray_world(img: np.ndarray):
     """
     R, G, B = img[:, :, 0], img[:, :, 1], img[:, :, 2]
 
+    # compute channel-wise means and global mean
     B_mean = np.mean(B)
     G_mean = np.mean(G)
     R_mean = np.mean(R)
-
     net_mean = np.mean([B_mean, G_mean, R_mean])
 
+    # normalize R channel
     R_new = (net_mean / (R_mean + np.finfo(float).eps)) * R
     R_new = np.minimum(R_new.astype(int), 255)
+
+    # normalize B channel
     B_new = (net_mean / (B_mean + np.finfo(float).eps)) * B
     B_new = np.minimum(B_new.astype(int), 255)
+
+    # normalize G channel
     G_new = (net_mean / (G_mean + np.finfo(float).eps)) * G
     G_new = np.minimum(G_new.astype(int), 255)
 
