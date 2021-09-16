@@ -30,6 +30,10 @@ def estimate_alb_nrm( image_stack, scriptV, shadow_trick=True):
         albedo at this point is |g|
         normal at this point is g / |g|
     """
+    # make sure scriptV is in the right column-order
+    # since images are arranges as [y-axis, x-axis, channels]
+    # we need scriptV as [Y, X, Z] while the given scriptV is [X, Y, Z]
+    scriptV[:,[0, 1]] = scriptV[:,[1, 0]]
 
     for y in range(h):
         for x in range(w):

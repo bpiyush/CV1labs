@@ -146,7 +146,10 @@ def convert_polar_to_cartesian(theta: np.ndarray, phi: np.ndarray, convert_to_ra
     return np.array([x, y, z]).T
 
 
-def show_single_image(img: np.ndarray, figsize=(8, 8), ax=None, show=True, grayscale=False):
+def show_single_image(
+        img: np.ndarray, figsize=(8, 8), ax=None, show=True, grayscale=False,
+        xticks=True, yticks=True, save=False, path="sample.png",
+    ):
     """Displays a single image."""
     if ax is None:
         fig, ax = plt.subplots(1, 1, figsize=figsize)
@@ -156,13 +159,24 @@ def show_single_image(img: np.ndarray, figsize=(8, 8), ax=None, show=True, grays
         args["cmap"] = "gray"
 
     ax.imshow(**args)
+
+    if not xticks:
+        ax.set_xticks([])
+    
+    if not yticks:
+        ax.set_yticks([])
+    
+    if save:
+        assert isinstance(path, str)
+        plt.savefig(path, bbox_inches="tight")
     
     if show:
         plt.show()
 
 
 def show_multiple_images(
-        imgs: List[np.ndarray], grid: tuple = None, figsize=(8, 8), ax=None, grayscale=False, show=False
+        imgs: List[np.ndarray], grid: tuple = None, figsize=(8, 8), ax=None,
+        grayscale=False, show=False, xticks=True, yticks=True, save=False, path="sample.png",
     ):
     """Displays a set of images based on given grid pattern."""
     assert isinstance(imgs, list)
@@ -190,6 +204,16 @@ def show_multiple_images(
         args["cmap"] = "gray"
 
     ax.imshow(**args)
+
+    if not xticks:
+        ax.set_xticks([])
+    
+    if not yticks:
+        ax.set_yticks([])
+    
+    if save:
+        assert isinstance(path, str)
+        plt.savefig(path, bbox_inches="tight")
 
     if show:
         plt.show()
