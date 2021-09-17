@@ -45,11 +45,38 @@ if __name__ == "__main__":
     # load input image
     img = cv2.imread("awb.jpg")
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    plt.imshow(img)
-    plt.show()
 
     # run the algo for this image
     new_img = gray_world(img)
-    plt.imshow(new_img)
+
+    # analyze average color of original & new image
+    oavg = img.mean(0).mean(0)
+    ocolor = np.zeros((224, 100, 3))
+    ocolor[...] = oavg
+    ocolor = ocolor.astype("uint8")
+    navg = new_img.mean(0).mean(0)
+    ncolor = np.zeros((224, 100, 3))
+    ncolor[...] = navg
+    ncolor = ncolor.astype("uint8")
+    white_strip = (255 * np.ones((224, 20, 3))).astype("uint8")
+
+    plt.imshow(np.hstack([ocolor, white_strip, ncolor]))
+    plt.savefig("./compare_avg_color.png", bbox_inches="tight")
     plt.show()
+
+    # show the images
+    fig, ax = plt.subplots(1, 2, figsize=(10, 5))
+    ax[0].imshow(img)
+    ax[0].set_xticks([])
+    ax[0].set_yticks([])
+    ax[0].set_xlabel("Original image", fontsize=14)
+
+    ax[1].imshow(new_img)
+    ax[1].set_xticks([])
+    ax[1].set_yticks([])
+    ax[1].set_xlabel("Corrected image", fontsize=14)
+
+    plt.savefig("./corrected.png", bbox_inches="tight")
+    plt.show()
+
 
