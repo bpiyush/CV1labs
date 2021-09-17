@@ -40,21 +40,41 @@ def form_image_from_decompositions(albedo: np.ndarray, shading: np.ndarray) -> n
 
 
 if __name__ == "__main__":
+
+    plt.rc('text', usetex=True)
+    plt.rc('font', family='serif')
+
     oimg = cv2.imread("./ball.png")
     oimg = cv2.cvtColor(oimg, cv2.COLOR_BGR2RGB)
-    plt.imshow(oimg)
-    plt.show()
 
     albedo = cv2.imread("./ball_albedo.png")
     albedo = cv2.cvtColor(albedo, cv2.COLOR_BGR2RGB)
-    plt.imshow(albedo)
-    plt.show()
 
     shading = cv2.imread("./ball_shading.png")
     shading = cv2.cvtColor(shading, cv2.COLOR_BGR2RGB)
-    plt.imshow(shading)
-    plt.show()
 
     nimg = form_image_from_decompositions(albedo, shading)
-    plt.imshow(nimg)
+
+    fig, ax = plt.subplots(1, 4, figsize=(20, 5))
+    ax[0].imshow(oimg)
+    ax[0].set_xticks([])
+    ax[0].set_yticks([])
+    ax[0].set_xlabel("Original image", fontsize=20)
+
+    ax[1].imshow(albedo)
+    ax[1].set_xticks([])
+    ax[1].set_yticks([])
+    ax[1].set_xlabel("Albedo", fontsize=20)
+
+    ax[2].imshow(shading)
+    ax[2].set_xticks([])
+    ax[2].set_yticks([])
+    ax[2].set_xlabel("Shading", fontsize=20)
+
+    ax[3].imshow(nimg)
+    ax[3].set_xticks([])
+    ax[3].set_yticks([])
+    ax[3].set_xlabel("Reconstructed image", fontsize=20)
+
+    plt.savefig("./results/iid.png", bbox_inches="tight")
     plt.show()
