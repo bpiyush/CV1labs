@@ -8,7 +8,7 @@ from construct_surface import construct_surface
 
 print('Part 1: Photometric Stereo\n')
 
-def photometric_stereo(image_dir='./SphereGray5/' ):
+def photometric_stereo(image_dir='./SphereGray5/', shadow_trick=True):
 
     # obtain many images in a fixed view under different illumination
     print('Loading images...\n')
@@ -18,7 +18,7 @@ def photometric_stereo(image_dir='./SphereGray5/' ):
 
     # compute the surface gradient from the stack of imgs and light source mat
     print('Computing surface albedo and normal map...\n')
-    [albedo, normals] = estimate_alb_nrm(image_stack, scriptV)
+    [albedo, normals] = estimate_alb_nrm(image_stack, scriptV, shadow_trick=shadow_trick)
 
 
     # integrability check: is (dp / dy  -  dq / dx) ^ 2 small everywhere?
@@ -36,7 +36,7 @@ def photometric_stereo(image_dir='./SphereGray5/' ):
     show_results(albedo, normals, height_map, SE)
 
 ## Face
-def photometric_stereo_face(image_dir='./yaleB02/'):
+def photometric_stereo_face(image_dir='./yaleB02/', path_type="column"):
     [image_stack, scriptV] = load_face_images(image_dir)
     [h, w, n] = image_stack.shape
     print('Finish loading %d images.\n' % n)
@@ -52,11 +52,18 @@ def photometric_stereo_face(image_dir='./yaleB02/'):
     SE[SE <= threshold] = float('nan') # for good visualization
 
     # compute the surface height
-    height_map = construct_surface( p, q )
+    height_map = construct_surface( p, q, path_type=path_type)
 
     # show results
-    show_results(albedo, normals, height_map, SE)
+    show_results(albedo, normals, height_map, SE, set_lim=False)
     
 if __name__ == '__main__':
-    photometric_stereo('./SphereGray5/')
-    # photometric_stereo_face()
+    # photometric_stereo('./SphereGray5/')
+    # photometric_stereo('./MonkeyGray/', shadow_trick=False)
+
+    # photometric_stereo('./SphereColor/', shadow_trick=False)
+    # photometric_stereo('./MonkeyColor/', shadow_trick=False)
+
+    photometric_stereo_face(path_type="column")
+    photometric_stereo_face(path_type="row")
+    photometric_stereo_face(path_type="average")

@@ -80,7 +80,7 @@ def load_face_images(image_dir='./yaleB02/'):
     return image_stack, scriptV
     
     
-def show_results(albedo, normals, height_map, SE):
+def show_results(albedo, normals, height_map, SE, set_lim=True):
     # Stride in the plot, you may want to adjust it to different images
     stride = 1
     
@@ -121,9 +121,10 @@ def show_results(albedo, normals, height_map, SE):
     fig = plt.figure(figsize=(8, 8))
     ax = fig.gca(projection='3d')
     ax.plot_surface(X,Y, H.T)
-    ax.set_xlim(0, 500)
-    ax.set_ylim(0, 500)
-    ax.set_zlim(0, 100)
+    if set_lim:
+        ax.set_xlim(0, 500)
+        ax.set_ylim(0, 500)
+        ax.set_zlim(0, 100)
     plt.show()
     
     # plotting model geometry
@@ -131,9 +132,10 @@ def show_results(albedo, normals, height_map, SE):
     fig = plt.figure(figsize=(8, 8))
     ax = fig.gca(projection='3d')
     ax.plot_surface(X,Y, H.T)
-    ax.set_xlim(0, 500)
-    ax.set_ylim(0, 500)
-    ax.set_zlim(0, 100)
+    if set_lim:
+        ax.set_xlim(0, 500)
+        ax.set_ylim(0, 500)
+        ax.set_zlim(0, 100)
     ax.set_xlabel("x")
     ax.set_ylabel("y")
     plt.show()
