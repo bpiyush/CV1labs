@@ -30,7 +30,7 @@ def photometric_stereo(image_dir='./SphereGray5/' ):
     SE[SE <= threshold] = float('nan') # for good visualization
 
     # compute the surface height
-    height_map = construct_surface( p, q )
+    height_map = construct_surface( p, q, path_type="column" )
 
     # show results
     show_results(albedo, normals, height_map, SE)
@@ -59,4 +59,4 @@ def photometric_stereo_face(image_dir='./yaleB02/'):
     
 if __name__ == '__main__':
     photometric_stereo('./SphereGray5/')
-    photometric_stereo_face()
+    # photometric_stereo_face()

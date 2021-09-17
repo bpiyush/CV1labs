@@ -118,16 +118,24 @@ def show_results(albedo, normals, height_map, SE):
     
     # plotting the SE
     H = SE[::stride,::stride]
-    fig = plt.figure()
+    fig = plt.figure(figsize=(8, 8))
     ax = fig.gca(projection='3d')
     ax.plot_surface(X,Y, H.T)
+    ax.set_xlim(0, 500)
+    ax.set_ylim(0, 500)
+    ax.set_zlim(0, 100)
     plt.show()
     
     # plotting model geometry
     H = height_map[::stride,::stride]
-    fig = plt.figure()
+    fig = plt.figure(figsize=(8, 8))
     ax = fig.gca(projection='3d')
     ax.plot_surface(X,Y, H.T)
+    ax.set_xlim(0, 500)
+    ax.set_ylim(0, 500)
+    ax.set_zlim(0, 100)
+    ax.set_xlabel("x")
+    ax.set_ylabel("y")
     plt.show()
 
 

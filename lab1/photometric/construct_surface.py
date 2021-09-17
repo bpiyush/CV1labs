@@ -69,11 +69,11 @@ def construct_surface(p, q, path_type='column'):
 
         # compute row-wise
         height_map_row[0, 0] = 0.0
-        for y in range(1, h):
-            height_map_row[y, 0] = height_map_row[y - 1, 0] + p[y, 0]
-        for y in range(h):
-            for x in range(1, w):
-                height_map_row[y, x] = height_map_row[y, x - 1] + q[y, x]
+        for x in range(1, w):
+            height_map_row[0, x] = height_map_row[0, x - 1] + p[0, x]
+        for x in range(w):
+            for y in range(1, h):
+                height_map_row[y, x] = height_map_row[y - 1, x] + q[y, x]
 
         height_map = (height_map_col + height_map_row) / 2.0
         
