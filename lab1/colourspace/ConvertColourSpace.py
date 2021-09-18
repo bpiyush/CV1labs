@@ -1,3 +1,4 @@
+from matplotlib.pyplot import colormaps
 import numpy as np
 import cv2
 import rgbConversions
@@ -31,11 +32,12 @@ def ConvertColourSpace(input_image, colourspace):
 
     elif colourspace.lower() == 'hsv':
         # use built-in function from opencv
-        pass
+        # opencv expects the input RGB image to be in [0, 1]
+        new_image = cv2.cvtColor(input_image / 255.0, cv2.COLOR_RGB2HSV)
 
     elif colourspace.lower() == 'ycbcr':
         # use built-in function from opencv
-        pass
+        new_image = cv2.cvtColor(input_image / 255.0, cv2.COLOR_RGB2YCrCb)
 
     elif colourspace.lower() == 'gray':
         # fill in the rgb2opponent function
@@ -43,20 +45,25 @@ def ConvertColourSpace(input_image, colourspace):
 
     else:
         print('Error: Unknown colorspace type [%s]...' % colourspace)
-        new_image = input_image
+        new_image = input_image.astype("uint8")
 
-    visualize(new_image)
+    visualize(new_image, colourspace.lower())
 
     return new_image
 
 
 if __name__ == '__main__':
     # Replace the image name with a valid image
-    img_path = 'test.png'
+    img_path = '../colour_constancy/awb.jpg'
     # Read with opencv
     I = cv2.imread(img_path)
     # Convert from BGR to RGB
     # This is a shorthand.
     I = I[:, :, ::-1]
 
-    out_img = ConvertColourSpace(I, 'opponent.png')
+    out_img = ConvertColourSpace(I, 'original')
+    out_img = ConvertColourSpace(I, 'opponent')
+    out_img = ConvertColourSpace(I, 'rgb')
+    out_img = ConvertColourSpace(I, 'YCbCr')
+    out_img = ConvertColourSpace(I, 'hsv')
+    out_img = ConvertColourSpace(I, 'gray')
