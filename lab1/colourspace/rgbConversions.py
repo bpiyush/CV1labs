@@ -43,7 +43,7 @@ def rgb2opponent(input_image):
             [1.0 / np.sqrt(3), 1.0 / np.sqrt(3), 1.0 / np.sqrt(3)]
         ]
     )
-    new_image = np.dot(input_image, matrix)
+    new_image = np.dot(input_image, matrix.T)
 
     return new_image
 
