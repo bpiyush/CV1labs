@@ -24,6 +24,7 @@ def check_integrability(normals):
     h, w = p.shape
     for y in range(h):
         for x in range(w):
+            # epsilon added to denominator for numerical stability
             p[y, x] = (normals[y, x, 0] / (normals[y, x, -1] + np.finfo(float).eps))
             q[y, x] = (normals[y, x, 1] / (normals[y, x, -1] + np.finfo(float).eps))
     
@@ -40,10 +41,12 @@ def check_integrability(normals):
     
     """
     # compute \del p / \del y
-    del_p_by_del_y = np.diff(p, axis=1, prepend=0)
+    # note: image is [H, W, 3] -> y-axis is indexed at 0
+    del_p_by_del_y = np.diff(p, axis=0, prepend=0)
 
     # compute \del q / \del x
-    del_q_by_del_x = np.diff(q, axis=0, prepend=0)
+    # note: image is [H, W, 3] -> x-axis is indexed at 1
+    del_q_by_del_x = np.diff(q, axis=1, prepend=0)
 
     SE = (del_p_by_del_y - del_q_by_del_x) ** 2
 

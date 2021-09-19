@@ -42,6 +42,7 @@ def estimate_alb_nrm( image_stack, scriptV, shadow_trick=True):
                 g = np.linalg.lstsq(a=scriptV, b=i, rcond=None)[0]
 
             albedo[y, x] = np.linalg.norm(g)
+            # epsilon added to denominator for numerical stability
             normal[y, x] = (g / (np.linalg.norm(g) + np.finfo(float).eps))
     
     return albedo, normal
