@@ -60,8 +60,8 @@ def load_face_images(image_dir='./yaleB02/'):
     # get list of all other image files
     import glob 
     d = glob.glob(os.path.join(image_dir, 'yaleB02_P00A*.pgm'))
-    # import random
-    # d = random.sample(d, num_images)
+    import random
+    d = random.sample(d, num_images)
     filenames = [os.path.basename(x) for x in d]
 
     ang = np.zeros([2, num_images])
@@ -82,9 +82,8 @@ def load_face_images(image_dir='./yaleB02/'):
     min_val = np.min(image_stack)
     max_val = np.max(image_stack)
     image_stack = (image_stack - min_val) / (max_val - min_val)
-    
-    return image_stack, scriptV, filenames
-    # return image_stack, scriptV
+
+    return image_stack, scriptV
     
     
 def show_results(albedo, normals, height_map, SE, set_lim=True):
