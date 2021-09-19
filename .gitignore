@@ -5,6 +5,8 @@
 *.pgm
 *.info
 
+# DS store
+*.DS_store
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

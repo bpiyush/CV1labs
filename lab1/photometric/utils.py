@@ -6,8 +6,14 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from typing import List
 
-def load_syn_images(image_dir='./SphereGray5/', channel=0):
-    files = os.listdir(image_dir)
+def load_syn_images(image_dir='./SphereGray5/', channel=0, files=None):
+
+    if files is None:
+        assert os.path.isdir(image_dir)
+        files = os.listdir(image_dir)
+    else:
+        assert isinstance(files, list)
+
     #files = [os.path.join(image_dir, f) for f in files]
     nfiles = len(files)
     
@@ -54,8 +60,8 @@ def load_face_images(image_dir='./yaleB02/'):
     # get list of all other image files
     import glob 
     d = glob.glob(os.path.join(image_dir, 'yaleB02_P00A*.pgm'))
-    import random
-    d = random.sample(d, num_images)
+    # import random
+    # d = random.sample(d, num_images)
     filenames = [os.path.basename(x) for x in d]
 
     ang = np.zeros([2, num_images])
@@ -77,7 +83,8 @@ def load_face_images(image_dir='./yaleB02/'):
     max_val = np.max(image_stack)
     image_stack = (image_stack - min_val) / (max_val - min_val)
     
-    return image_stack, scriptV
+    return image_stack, scriptV, filenames
+    # return image_stack, scriptV
     
     
 def show_results(albedo, normals, height_map, SE, set_lim=True):
@@ -227,3 +234,62 @@ def show_multiple_images(
 
     if show:
         plt.show()
+
+
+def plot_surface(
+        f, stride=1, fig=None, nrows=1, ncols=1, index=1, figsize=(8, 8),
+        title="", xlim=[0, 512], ylim=[0, 512], zlim=[0, 100], set_lim=True,
+        facecolors=None
+    ):
+    """Helper function to plot 3D surface"""
+
+    # meshgrid
+    X, Y, _ = np.meshgrid(
+        np.arange(0, np.shape(f)[0], stride),
+        np.arange(0, np.shape(f)[1], stride),
+        np.arange(1)
+    )
+    X = X[..., 0]
+    Y = Y[..., 0]
+    
+    # plotting the SE
+    H = f[::stride,::stride]
+
+    if fig is None:
+        fig = plt.figure(figsize=figsize)
+
+    ax = fig.add_subplot(nrows, ncols, index, projection='3d')
+
+    args = {"X": X, "Y": Y, "Z": H.T, "color": "skyblue"}
+    if facecolors is not None:
+        args.update({"facecolors": facecolors})
+    ax.plot_surface(**args)
+
+    ax.set_title(title)
+    ax.set_xlabel("$X$")
+    ax.set_ylabel("$Y$")
+    ax.set_zlabel("$Z$")
+
+    if set_lim:
+        ax.set_xlim(*xlim)
+        ax.set_ylim(*ylim)
+        ax.set_zlim(*zlim)
+
+    plt.show()
+
+
+def plot_grid_of_surfaces(surfaces, grid, facecolors=None):
+    if facecolors is None:
+        facecolors = [None for x in surfaces]
+
+    fig = plt.figure(figsize=(10, 6))
+
+    for i in range(grid[0]):
+        for j in range(grid[1]):
+            index = grid[0] * i + j
+            plot_surface(
+                surfaces[index], fig=fig, nrows=grid[0], ncols=grid[1], index=(index + 1),
+                set_lim=False, facecolors=facecolors[index],
+            )
+    
+    plt.show()

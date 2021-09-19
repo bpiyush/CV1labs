@@ -8,11 +8,11 @@ from construct_surface import construct_surface
 
 print('Part 1: Photometric Stereo\n')
 
-def photometric_stereo(image_dir='./SphereGray5/', shadow_trick=True):
+def photometric_stereo(image_dir='./SphereGray5/', files=None, shadow_trick=True, show=True, return_cache=False):
 
     # obtain many images in a fixed view under different illumination
     print('Loading images...\n')
-    [image_stack, scriptV] = load_syn_images(image_dir)
+    [image_stack, scriptV] = load_syn_images(image_dir=image_dir, files=files)
     [h, w, n] = image_stack.shape
     print('Finish loading %d images.\n' % n)
 
@@ -33,10 +33,14 @@ def photometric_stereo(image_dir='./SphereGray5/', shadow_trick=True):
     height_map = construct_surface( p, q, path_type="column" )
 
     # show results
-    show_results(albedo, normals, height_map, SE)
+    if show:
+        show_results(albedo, normals, height_map, SE)
+
+    if return_cache:
+        return albedo, normals, height_map, SE
 
 ## Face
-def photometric_stereo_face(image_dir='./yaleB02/', path_type="column"):
+def photometric_stereo_face(image_dir='./yaleB02/', path_type="column", show=True, return_cache=False):
     [image_stack, scriptV] = load_face_images(image_dir)
     [h, w, n] = image_stack.shape
     print('Finish loading %d images.\n' % n)
@@ -55,15 +59,19 @@ def photometric_stereo_face(image_dir='./yaleB02/', path_type="column"):
     height_map = construct_surface( p, q, path_type=path_type)
 
     # show results
-    show_results(albedo, normals, height_map, SE, set_lim=False)
+    if show:
+        show_results(albedo, normals, height_map, SE, set_lim=False)
+
+    if return_cache:
+        return albedo, normals, height_map, SE
     
 if __name__ == '__main__':
     # photometric_stereo('./SphereGray5/')
-    # photometric_stereo('./MonkeyGray/', shadow_trick=False)
+    # photometric_stereo('./MonkeyGray/', shadow_trick=True)
 
     # photometric_stereo('./SphereColor/', shadow_trick=False)
     # photometric_stereo('./MonkeyColor/', shadow_trick=False)
 
     photometric_stereo_face(path_type="column")
-    photometric_stereo_face(path_type="row")
-    photometric_stereo_face(path_type="average")
+    # photometric_stereo_face(path_type="row")
+    # photometric_stereo_face(path_type="average")
