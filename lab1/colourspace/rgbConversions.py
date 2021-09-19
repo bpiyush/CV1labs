@@ -45,6 +45,11 @@ def rgb2opponent(input_image):
     )
     new_image = np.dot(input_image, matrix.T)
 
+    # normalize the image channel-wise to [0, 1]
+    for i in range(new_image.shape[-1]):
+        x = new_image[..., i]
+        new_image[..., i] = (x - x.min())/(x.max() - x.min())
+
     return new_image
 
 
