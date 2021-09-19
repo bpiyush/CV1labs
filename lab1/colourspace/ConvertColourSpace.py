@@ -34,6 +34,8 @@ def ConvertColourSpace(input_image, colourspace):
         # use built-in function from opencv
         # opencv expects the input RGB image to be in [0, 1]
         new_image = cv2.cvtColor(input_image / 255.0, cv2.COLOR_RGB2HSV)
+        # normalize the H channel since it has values in [0, 360]
+        new_image[..., 0] /= new_image[..., 0].max()
 
     elif colourspace.lower() == 'ycbcr':
         # use built-in function from opencv
@@ -67,7 +69,7 @@ if __name__ == '__main__':
     # out_img = ConvertColourSpace(I, 'original')
 
     # type 1: conversion to `opponent`
-    out_img = ConvertColourSpace(I, 'opponent')
+    # out_img = ConvertColourSpace(I, 'opponent')
 
     # # type 2: conversion to rgb
     # out_img = ConvertColourSpace(I, 'rgb')
@@ -76,7 +78,7 @@ if __name__ == '__main__':
     # out_img = ConvertColourSpace(I, 'YCbCr')
 
     # # type 4: conversion to hsv
-    # out_img = ConvertColourSpace(I, 'hsv')
+    out_img = ConvertColourSpace(I, 'hsv')
 
     # # type 5: conversion to gray
     # out_img = ConvertColourSpace(I, 'gray')
