@@ -8,11 +8,11 @@ from construct_surface import construct_surface
 
 print('Part 1: Photometric Stereo\n')
 
-def photometric_stereo(image_dir='./SphereGray5/', files=None, shadow_trick=True, show=True, return_cache=False):
+def photometric_stereo(image_dir='./SphereGray5/', files=None, shadow_trick=True, show=True, return_cache=False, channel=0):
 
     # obtain many images in a fixed view under different illumination
     print('Loading images...\n')
-    [image_stack, scriptV] = load_syn_images(image_dir=image_dir, files=files)
+    [image_stack, scriptV] = load_syn_images(image_dir=image_dir, files=files, channel=channel)
     [h, w, n] = image_stack.shape
     print('Finish loading %d images.\n' % n)
 
@@ -38,6 +38,24 @@ def photometric_stereo(image_dir='./SphereGray5/', files=None, shadow_trick=True
 
     if return_cache:
         return albedo, normals, height_map, SE
+
+
+# Color images
+def photometric_stereo_color(image_dir='./SphereColor/', num_channels=3, files=None, shadow_trick=False):
+
+    albedos = []
+    normals = []
+    height_maps = []
+
+    for c in range(num_channels):
+        albedo, normal, height_map, SE = photometric_stereo(
+            image_dir, channel=c, show=False, return_cache=True, shadow_trick=shadow_trick
+        )
+        albedos.append(albedo)
+        normals.append(normal)
+        height_maps.append(height_map)
+
+    return albedos, normals, height_maps
 
 ## Face
 def photometric_stereo_face(image_dir='./yaleB02/', path_type="column", show=True, return_cache=False):
@@ -75,3 +93,9 @@ if __name__ == '__main__':
     photometric_stereo_face(path_type="column")
     # photometric_stereo_face(path_type="row")
     # photometric_stereo_face(path_type="average")
+
+    # photometric_stereo_color('./SphereColor/')
+
+    # for multi-channel outputs
+    # albedos, normals, height_maps = photometric_stereo_color("./SphereColor/")
+    # albedos, normals, height_maps = photometric_stereo_color("./MonkeyColor/")
