@@ -246,7 +246,7 @@ if smoothingFlag:
 
     for i  in range(len(featureMags)):
       GaussianKernel = cv2.getGaussianKernel(
-        ksize=gaborFilterBank[0]["filterPairs"].shape[0], sigma=3
+        ksize=gaborFilterBank[0]["filterPairs"].shape[0], sigma=0.5
       )
       GaussianKernel = np.matmul(GaussianKernel, GaussianKernel.T)
       dst = np.zeros(featureMags[i].shape)
@@ -321,8 +321,9 @@ plt.show()
 # Use the pixLabels to visualize segmentation.
 Aseg1 = np.zeros_like(img)
 Aseg2 = np.zeros_like(img)
-BW = pixLabels == 2  # check for the value of your labels in pixLabels (could be 1 or 0 instead of 2)
-BW = np.repeat(BW[:, :, np.newaxis], 3, axis=2) # do this only if you have 3 channels in the img
+BW = pixLabels == 1  # check for the value of your labels in pixLabels (could be 1 or 0 instead of 2)
+if len(img.shape) and img.shape[-1] == 3:
+  BW = np.repeat(BW[:, :, np.newaxis], 3, axis=2) # do this only if you have 3 channels in the img
 Aseg1[BW] = img[BW]
 Aseg2[~BW] = img[~BW]
 
