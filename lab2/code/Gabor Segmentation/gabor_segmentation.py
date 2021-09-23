@@ -12,7 +12,7 @@ from createGabor import createGabor
 # Hyperparameters
 k        = 2      # number of clusters in k-means algorithm. By default, 
                   # we consider k to be 2 in foreground-background segmentation task.
-image_id = 'Polar' # Identifier to switch between input images.
+image_id = 'Kobi' # Identifier to switch between input images.
                   # Possible ids: 'Kobi',    'Polar', 'Robin-1'
                   #               'Robin-2', 'Cows', 'SciencePark'
 
@@ -334,3 +334,17 @@ plt.imshow(Aseg2, 'jet',  interpolation='none', alpha=0.7)
 plt.axis("off")
 plt.show()
 
+# plot jointly and save
+fig, ax = plt.subplots(1, 2, figsize=(10, 5), constrained_layout=True)
+ax[0].imshow(img, cmap="gray")
+ax[0].axis("off")
+ax[0].set_title(f"Original image: {image_id}", fontsize=14)
+
+
+ax[1].imshow(Aseg1, 'gray', interpolation='none')
+ax[1].imshow(Aseg2, 'jet',  interpolation='none', alpha=0.7)
+ax[1].axis("off")
+ax[1].set_title(f"Segmentation montage", fontsize=14)
+
+plt.savefig(f"results/{image_id}.png", bbox_inches="tight")
+plt.show()
