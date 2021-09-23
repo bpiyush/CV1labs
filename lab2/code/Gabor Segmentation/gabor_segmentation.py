@@ -4,7 +4,8 @@ import math
 import numpy as np
 import time
 from sklearn.decomposition import PCA
-from creatGabor import createGabor
+from sklearn.cluster import KMeans
+from createGabor import createGabor
 
 
 
@@ -53,6 +54,11 @@ else:
 # Image adjustments
 img = cv2.resize(img, (0, 0), fx=resize_factor, fy=resize_factor)
 img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+
+# convert img to floats [0, 1] to not run into issues of magnitude of feature maps going to nan
+# this is because if img remain uint, then square of a positive integer may become -ve and sqrt
+# shall go to nan
+img = img.astype(float) / 255.0
 
 # Display image
 plt.figure()
@@ -146,7 +152,25 @@ for gaborFilter in gaborFilterBank:
     # gaborFilter["filterPairs"] has two elements. One is related to the real part 
     # of the Gabor Filter and the other one is the imagineray part.
     real_out = None  # \\TODO: filter the grayscale input with real part of the Gabor
+    real_out = np.zeros(img.shape)
+    real_out = cv2.filter2D(
+      src=img,
+      dst=real_out,
+      borderType=cv2.BORDER_WRAP,
+      kernel=gaborFilter["filterPairs"][:, :, 0],
+      ddepth=1,
+    )
+
     imag_out = None  # \\TODO: filter the grayscale input with imaginary part of the Gabor
+    imag_out = np.zeros(img.shape)
+    imag_out = cv2.filter2D(
+      src=img,
+      dst=imag_out,
+      borderType=cv2.BORDER_WRAP,
+      kernel=gaborFilter["filterPairs"][:, :, 1],
+      ddepth=1,
+    )
+
     featureMaps.append(np.stack((real_out, imag_out), 2))
     
     # Visualize the filter responses if you wish.
@@ -173,7 +197,19 @@ featureMags = []
 for i, fm in enumerate(featureMaps):
     real_part = fm[...,0]
     imag_part = fm[...,1]
+
+    # check if nan exists
+    if np.isnan(real_part).sum() or np.isnan(imag_part).sum():
+      print(f"Warning: Feature map {i} has a NaN value.")
+
     mag = None  # \\TODO: Compute the magnitude here
+    mag = np.sqrt((real_part.astype(float) ** 2) + (imag_part.astype(float) ** 2))
+
+    # check if mag has nan entries
+    if np.isnan(mag).sum():
+      # import ipdb; ipdb.set_trace()
+      exit(f"Error: Found NaN entry in magnitude matrix for feature map {i}")
+
     featureMags.append(mag)
     
     # Visualize the magnitude response if you wish.
@@ -207,6 +243,20 @@ if smoothingFlag:
         # i)  filter the magnitude response with appropriate Gaussian kernels
         # ii) insert the smoothed image into features[:,:,j]
     #END_FOR
+
+    for i  in range(len(featureMags)):
+      GaussianKernel = cv2.getGaussianKernel(
+        ksize=gaborFilterBank[0]["filterPairs"].shape[0], sigma=3
+      )
+      GaussianKernel = np.matmul(GaussianKernel, GaussianKernel.T)
+      dst = np.zeros(featureMags[i].shape)
+      features[..., i] = cv2.filter2D(
+        src=featureMags[i],
+        dst=dst,
+        borderType=cv2.BORDER_WRAP,
+        kernel=GaussianKernel,
+        ddepth=1,
+      )
 else:
     # Don't smooth but just insert magnitude images into the matrix
     # called features.
@@ -224,9 +274,11 @@ features = np.reshape(features, newshape=(numRows * numCols, -1))
 # Standardize features. 
 # \\ Hint: see http://ufldl.stanford.edu/wiki/index.php/Data_Preprocessing for more information.
 
-features = None  # \\ TODO: i)  Implement standardization on matrix called features.
+# features = None  # \\ TODO: i)  Implement standardization on matrix called features.
                  #          ii) Return the standardized data matrix.
-
+features_mean = np.mean(features, axis=0)
+features_std = np.std(features, axis=0)
+features = (features - features_mean) / features_std
 
 # (Optional) Visualize the saliency map using the first principal component 
 # of the features matrix. It will be useful to diagnose possible problems 
@@ -248,6 +300,9 @@ plt.show()
 #            sklearn's built-in kmeans function.
 tic = time.time()
 pixLabels = None  # \\TODO: Return cluster labels per pixel
+kmeans = KMeans(n_clusters=k, random_state=0)
+kmeans.fit(features)
+pixLabels = kmeans.labels_
 ctime = time.time() - tic
 print(f'Clustering completed in {ctime} seconds.')
 
