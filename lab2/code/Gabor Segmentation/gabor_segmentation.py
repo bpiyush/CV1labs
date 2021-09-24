@@ -12,7 +12,7 @@ from createGabor import createGabor
 # Hyperparameters
 k        = 2      # number of clusters in k-means algorithm. By default, 
                   # we consider k to be 2 in foreground-background segmentation task.
-image_id = 'Kobi' # Identifier to switch between input images.
+image_id = 'Cows' # Identifier to switch between input images.
                   # Possible ids: 'Kobi',    'Polar', 'Robin-1'
                   #               'Robin-2', 'Cows', 'SciencePark'
 
@@ -152,24 +152,12 @@ for gaborFilter in gaborFilterBank:
     # gaborFilter["filterPairs"] has two elements. One is related to the real part 
     # of the Gabor Filter and the other one is the imagineray part.
     real_out = None  # \\TODO: filter the grayscale input with real part of the Gabor
-    real_out = np.zeros(img.shape)
-    real_out = cv2.filter2D(
-      src=img,
-      dst=real_out,
-      borderType=cv2.BORDER_WRAP,
-      kernel=gaborFilter["filterPairs"][:, :, 0],
-      ddepth=1,
-    )
+    kernel = gaborFilter["filterPairs"][:, :, 0]
+    real_out = cv2.filter2D(src=img.copy(), ddepth=-1, kernel=kernel)
 
     imag_out = None  # \\TODO: filter the grayscale input with imaginary part of the Gabor
-    imag_out = np.zeros(img.shape)
-    imag_out = cv2.filter2D(
-      src=img,
-      dst=imag_out,
-      borderType=cv2.BORDER_WRAP,
-      kernel=gaborFilter["filterPairs"][:, :, 1],
-      ddepth=1,
-    )
+    kernel = gaborFilter["filterPairs"][:, :, 1]
+    imag_out = cv2.filter2D(src=img.copy(), ddepth=-1, kernel=kernel)
 
     featureMaps.append(np.stack((real_out, imag_out), 2))
     
@@ -207,7 +195,6 @@ for i, fm in enumerate(featureMaps):
 
     # check if mag has nan entries
     if np.isnan(mag).sum():
-      # import ipdb; ipdb.set_trace()
       exit(f"Error: Found NaN entry in magnitude matrix for feature map {i}")
 
     featureMags.append(mag)
@@ -245,18 +232,10 @@ if smoothingFlag:
     #END_FOR
 
     for i  in range(len(featureMags)):
-      GaussianKernel = cv2.getGaussianKernel(
-        ksize=gaborFilterBank[0]["filterPairs"].shape[0], sigma=0.5
-      )
+      GaussianKernel = cv2.getGaussianKernel(5, sigma=0.5)
       GaussianKernel = np.matmul(GaussianKernel, GaussianKernel.T)
-      dst = np.zeros(featureMags[i].shape)
-      features[..., i] = cv2.filter2D(
-        src=featureMags[i],
-        dst=dst,
-        borderType=cv2.BORDER_WRAP,
-        kernel=GaussianKernel,
-        ddepth=1,
-      )
+      kernel = GaussianKernel / GaussianKernel.sum()
+      features[..., i] = cv2.filter2D(src=featureMags[i].copy(), ddepth=-1, kernel=kernel)
 else:
     # Don't smooth but just insert magnitude images into the matrix
     # called features.
