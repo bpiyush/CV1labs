@@ -16,14 +16,16 @@ def denoise(image, kernel_type, k):
 
 
 if __name__ == '__main__':
+    from myPSNR import myPSNR
+
+    original_image = cv2.imread(f'images/image1.jpg', cv2.IMREAD_GRAYSCALE)
 
     noise_names = {
         "saltpepper": "Salt And Pepper",
         "gaussian": "Gaussian",
     }
 
-    kernel_type = "box"
-    convert_to_float = False
+    kernel_type = "median"
 
     noise_type = "gaussian"
     noisy_image = cv2.imread(f'images/image1_{noise_type}.jpg', cv2.IMREAD_GRAYSCALE)
@@ -31,7 +33,11 @@ if __name__ == '__main__':
     ksizes = [3, 5, 7]
     denoised_outputs = []
     for k in ksizes:
-        denoised_outputs.append(denoise(noisy_image, kernel_type, k))
+        denoised_image = denoise(noisy_image, kernel_type, k)
+        denoised_outputs.append(denoised_image)
+
+        psnr = myPSNR(original_image.astype("float32"), denoised_image.astype("float32"))
+        print(f"PSNR for ({kernel_type}, {noise_type}, filter size: {k}): {psnr}")
 
     fig, ax = plt.subplots(1, 4, figsize=(20, 4), constrained_layout=True)
 
