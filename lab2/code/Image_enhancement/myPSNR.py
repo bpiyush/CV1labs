@@ -3,9 +3,9 @@ import cv2
 
 
 def myPSNR(orig_image, approx_image):
-    imax = max(map(max, orig_image))
+    imax = np.max(orig_image)
     mse = np.square(orig_image - approx_image)
-    mse = sum(map(sum, mse))
+    mse = np.sum(mse)
     mse /= np.prod(orig_image.shape)
     PSNR = 20*np.log10(imax / np.sqrt(mse))
     return PSNR
