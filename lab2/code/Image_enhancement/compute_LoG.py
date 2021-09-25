@@ -11,55 +11,72 @@ def mask(n):
     return mask
 
 
-def compute_LoG(image, LOG_type, d1=0, d2=0):
+def LoG_at_pixel(x, y, sigma):
+    """Computes the Laplacian of Gaussian at a given (x, y)"""
+    value = (x ** 2 + y ** 2) / (2.0 * (sigma ** 2))
+    return (-1.0 / (np.pi * sigma ** 4)) * np.exp(-value) * (1 - value)
+
+
+def LoG_kernel(sigma, ksize):
+    """Computes the Laplacian of Gaussian at a given (x, y)"""
+    log = np.zeros((ksize, ksize))
+    b = int(ksize / 2)
+    for x in np.arange(-b, b + 1, 1):
+        for y in np.arange(-b, b + 1, 1):
+            log[y +b][x + b] = LoG_at_pixel(x=x, y=y, sigma=sigma)
+    return log
+
+
+def Gaussian_at_pixel(x, y, sigma):
+    """Computes the Gaussian at a given (x, y)"""
+    value = (x ** 2 + y ** 2) / (2.0 * (sigma ** 2))
+    return (1.0 / (2 * np.pi * sigma ** 2)) * np.exp(-value)
+
+
+def Gaussian_kernel(sigma, ksize):
+    """Computes the Gaussian at a given (x, y)"""
+    gauss = np.zeros((ksize, ksize))
+    b = int(ksize / 2)
+    for x in np.arange(-b, b + 1, 1):
+        for y in np.arange(-b, b + 1, 1):
+            gauss[y +b][x + b] = Gaussian_at_pixel(x=x, y=y, sigma=sigma)
+    return gauss
+
+
+def compute_LoG(image, LOG_type, d1=1.0, d2=1.0):
     if LOG_type == 1:
-        k = 5
-        gauss = np.zeros((k, k))
-        d = 0.5
-        b = int(k / 2)
-        for x in np.arange(-b, b + 1, 1):
-            for y in np.arange(-b, b + 1, 1):
-                ans = 1 / (2 * np.pi * d ** 2)
-                ans *= np.exp(-(x ** 2 + y ** 2) / (2 * d ** 2))
-                gauss[y + b][x + b] = ans
+        gauss = Gaussian_kernel(sigma=0.5, ksize=5)
         smoothed = scipy.signal.convolve2d(image, gauss)
-        laplacian = mask(k)
+        laplacian = LoG_kernel(sigma=0.5, ksize=5)
         return scipy.signal.convolve2d(smoothed, laplacian)
 
     elif LOG_type == 2:
-        k = 5
-        LoG = np.zeros((k, k))
-        d = 0.5
-        b = int(k / 2)
-
-        for x in np.arange(-b, b + 1, 1):
-            for y in np.arange(-b, b + 1, 1):
-                ans = -1 / (np.pi * d ** 4)
-                ans *= (1 - (x ** 2 + y ** 2) / (2 * d ** 2))
-                ans *= np.exp(-(x ** 2 + y ** 2) / (2 * d ** 2))
-                LoG[y + b][x + b] = ans
-        return scipy.signal.convolve2d(image, LoG)
+        laplacian = LoG_kernel(sigma=0.5, ksize=5)
+        return scipy.signal.convolve2d(image, laplacian)
 
     elif LOG_type == 3:
-        k = 5
-        DoG = np.zeros((5, 5))
-        b = int(k / 2)
-        for x in np.arange(-b, b + 1, 1):
-            for y in np.arange(-b, b + 1, 1):
-                ans = 1 / np.sqrt(2 * np.pi)
-                ans *= np.exp(-x ** 2 / (2 * d1 ** 2)) - np.exp(-y ** 2 / (2 * d2 ** 2))
-                DoG[y + b][x + b] = ans
-        return scipy.signal.convolve2d(image, DoG)
+        gauss_1 = Gaussian_kernel(sigma=0.4, ksize=5)
+        gauss_2 = Gaussian_kernel(sigma=1.0, ksize=5)
+        dog = gauss_1 - gauss_2
+
+        return scipy.signal.convolve2d(image, dog)
 
 
 if __name__ == '__main__':
     image_2 = cv2.imread('images/image2.jpg', cv2.IMREAD_GRAYSCALE)
-    image_2 = np.array(image_2, dtype='float32')
-    plt.imshow(compute_LoG(image_2, 1), cmap='gray')
+    image_2 = np.array(image_2 / 255.0, dtype='float32')
+
+    labels = ["Laplacian", "LoG", "DoG"]
+
+    fig, ax = plt.subplots(1, 4, figsize=(15, 3), constrained_layout=True)
+    ax[0].axis("off")
+    ax[0].imshow(image_2)
+    ax[0].set_title("Original image")
+
+    for i, _ax in enumerate(ax[1:]):
+        _ax.imshow(compute_LoG(image_2, i + 1))
+        _ax.axis("off")
+        _ax.set_title(labels[i])
+    
+    plt.savefig("results/log_all.png", bbox_inches="tight")
     plt.show()
-    plt.imshow(compute_LoG(image_2, 2), cmap='gray')
-    plt.show()
-    for i in range(5):
-        for j in range(5):
-            plt.imshow(compute_LoG(image_2, 3, d1=i, d2=j), cmap='gray')
-            plt.show()
