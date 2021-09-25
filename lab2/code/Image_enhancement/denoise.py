@@ -9,7 +9,7 @@ def denoise(image, kernel_type, k):
     elif kernel_type == 'median':
         out = cv2.medianBlur(src=image, ksize=k)
     elif kernel_type == 'gaussian':
-        out = cv2.GaussianBlur(src=image, ksize=(k, k))
+        out = cv2.GaussianBlur(src=image, ksize=(k, k), sigmaX=1.0)
     else:
         print('Operation not implemented')
     return out
@@ -25,7 +25,7 @@ if __name__ == '__main__':
     kernel_type = "box"
     convert_to_float = False
 
-    noise_type = "saltpepper"
+    noise_type = "gaussian"
     noisy_image = cv2.imread(f'images/image1_{noise_type}.jpg', cv2.IMREAD_GRAYSCALE)
 
     ksizes = [3, 5, 7]
