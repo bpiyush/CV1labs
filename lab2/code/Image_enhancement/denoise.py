@@ -9,7 +9,7 @@ def denoise(image, **kwargs):
     elif kwargs['kernel_type'] == 'median':
         out = cv2.medianBlur(image, kwargs['filter_size'])
     elif kwargs['kernel_type'] == 'gaussian':
-        out = cv2.GaussianBlur(image, kwargs['filter_size'], sigmaX=kwargs['sigma'], sigmaY=kwargs)
+        out = cv2.GaussianBlur(image, kwargs['filter_size'], sigmaX=kwargs['sigma'], sigmaY=kwargs['sigma'])
     else:
         print('Operation not implemented')
     return out
