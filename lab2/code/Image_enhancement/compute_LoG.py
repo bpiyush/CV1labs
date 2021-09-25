@@ -46,20 +46,20 @@ def Gaussian_kernel(sigma, ksize):
 def compute_LoG(image, LOG_type, d1=1.0, d2=1.0):
     if LOG_type == 1:
         gauss = Gaussian_kernel(sigma=0.5, ksize=5)
-        smoothed = scipy.signal.convolve2d(image, gauss)
+        smoothed = scipy.signal.convolve2d(image, gauss/np.sum(gauss))
         laplacian = LoG_kernel(sigma=0.5, ksize=5)
-        return scipy.signal.convolve2d(smoothed, laplacian)
+        return scipy.signal.convolve2d(smoothed, laplacian/np.sum(laplacian))
 
     elif LOG_type == 2:
         laplacian = LoG_kernel(sigma=0.5, ksize=5)
-        return scipy.signal.convolve2d(image, laplacian)
+        return scipy.signal.convolve2d(image, laplacian/np.sum(laplacian))
 
     elif LOG_type == 3:
         gauss_1 = Gaussian_kernel(sigma=0.4, ksize=5)
         gauss_2 = Gaussian_kernel(sigma=1.0, ksize=5)
         dog = gauss_1 - gauss_2
 
-        return scipy.signal.convolve2d(image, dog)
+        return scipy.signal.convolve2d(image, dog/np.sum(dog))
 
 
 if __name__ == '__main__':
