@@ -7,7 +7,7 @@ def myPSNR(orig_image, approx_image):
     mse = np.square(orig_image - approx_image)
     mse = sum(map(sum, mse))
     mse /= np.prod(orig_image.shape)
-    PSNR = 20*np.log10(imax / np.sqrt(mse))
+    PSNR = 20*np.log10(imax / (np.sqrt(mse) + np.finfo(float).eps))
     return PSNR
 
 
