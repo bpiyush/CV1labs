@@ -12,7 +12,7 @@ from createGabor import createGabor
 # Hyperparameters
 k        = 2      # number of clusters in k-means algorithm. By default, 
                   # we consider k to be 2 in foreground-background segmentation task.
-image_id = 'Cows' # Identifier to switch between input images.
+image_id = 'Kobi' # Identifier to switch between input images.
                   # Possible ids: 'Kobi',    'Polar', 'Robin-1'
                   #               'Robin-2', 'Cows', 'SciencePark'
 
@@ -90,11 +90,15 @@ lambdas = 2**np.arange(0, (n-2)+1) * lambdaMin
 
 # Define the set of orientations for the Gaussian envelope.
 dTheta       = 2 * np.pi/8                  # \\ the step size
-orientations = np.arange(0, np.pi+dTheta, dTheta)        
+orientations = np.arange(0, np.pi+dTheta, dTheta)
 
 # Define the set of sigmas for the Gaussian envelope. Sigma here defines 
 # the standard deviation, or the spread of the Gaussian. 
 sigmas = np.array([1,2])
+# sigmas = 3 * 0.5 * lambdas
+# print(lambdas)
+# import ipdb; ipdb.set_trace()
+# sigmas = np.array([5])
 
 # Now you can create the filterbank. We provide you with a Python list
 # called gaborFilterBank in which we will hold the filters and their
