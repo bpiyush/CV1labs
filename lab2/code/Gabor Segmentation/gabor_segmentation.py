@@ -237,9 +237,8 @@ if smoothingFlag:
 
     for i  in range(len(featureMags)):
       GaussianKernel = cv2.getGaussianKernel(5, sigma=0.5)
-      GaussianKernel = np.matmul(GaussianKernel, GaussianKernel.T)
-      kernel = GaussianKernel / GaussianKernel.sum()
-      features[..., i] = cv2.filter2D(src=featureMags[i].copy(), ddepth=-1, kernel=kernel)
+      GaussianKernel = np.outer(GaussianKernel, GaussianKernel)
+      features[..., i] = cv2.filter2D(src=featureMags[i].copy(), ddepth=-1, kernel=GaussianKernel)
 else:
     # Don't smooth but just insert magnitude images into the matrix
     # called features.
