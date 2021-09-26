@@ -20,3 +20,14 @@ unzip photometric_images.zip
    conda install numpy ipdb jupyterlab matplotlib seaborn
    pip install opencv-python
    ```
+
+
+# Members
+
+Group 38
+
+* Piyush Bagad (13677640)
+* Mark Alence ()
+* Ankit (13608568)
+
+Sample filename: `13677640_X_13608568.zip`
