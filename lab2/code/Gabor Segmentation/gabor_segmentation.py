@@ -12,7 +12,7 @@ from createGabor import createGabor
 # Hyperparameters
 k        = 2      # number of clusters in k-means algorithm. By default, 
                   # we consider k to be 2 in foreground-background segmentation task.
-image_id = 'Kobi' # Identifier to switch between input images.
+image_id = 'Polar' # Identifier to switch between input images.
                   # Possible ids: 'Kobi',    'Polar', 'Robin-1'
                   #               'Robin-2', 'Cows', 'SciencePark'
 
@@ -236,7 +236,8 @@ if smoothingFlag:
     #END_FOR
 
     for i  in range(len(featureMags)):
-      GaussianKernel = cv2.getGaussianKernel(5, sigma=0.5)
+      sigma = 3 * 0.5 * gaborFilterBank[i]["lmbda"]
+      GaussianKernel = cv2.getGaussianKernel(5, sigma=sigma)
       GaussianKernel = np.outer(GaussianKernel, GaussianKernel)
       features[..., i] = cv2.filter2D(src=featureMags[i].copy(), ddepth=-1, kernel=GaussianKernel)
 else:
