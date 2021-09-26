@@ -7,6 +7,7 @@ def gauss2D( sigma_x, sigma_y , kernel_size ):
     G_x = gauss1D(sigma_x, kernel_size)
     G_y = gauss1D(sigma_x, kernel_size)
     G = np.outer(G_x, G_y)
+    # outer product shall be already normalized; so no need to normalize
     return G
 
 
