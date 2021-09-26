@@ -27,7 +27,7 @@ unzip photometric_images.zip
 Group 38
 
 * Piyush Bagad (13677640)
-* Mark Alence ()
+* Mark Alence (13771272)
 * Ankit (13608568)
 
-Sample filename: `13677640_X_13608568.zip`
+Sample filename: `13677640_13771272_13608568.zip`
