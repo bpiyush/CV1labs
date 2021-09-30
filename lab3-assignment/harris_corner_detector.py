@@ -1,0 +1,104 @@
+"""Script to detect Harris corners in an image."""
+from os.path import basename
+import numpy as np
+import cv2
+import matplotlib.pyplot as plt
+from scipy.ndimage.filters import maximum_filter
+
+from utils import show_multiple_images
+
+
+def _check_image(I):
+    assert isinstance(I, np.ndarray)
+    assert len(I.shape) == 2
+    H, W = I.shape
+    return H, W
+
+
+def compute_Ix(I: np.ndarray, sigma: float = 1.0):
+    gauss_1d = cv2.getGaussianKernel(ksize=3, sigma=sigma)
+    Gx = np.array([-1.0, 0.0, 1.0])
+    smoooth_Gx = np.multiply(Gx, gauss_1d)
+    Ix = cv2.filter2D(src=I, ddepth=-1, kernel=smoooth_Gx)
+    return Ix
+
+
+def compute_Iy(I: np.ndarray, sigma: float = 1.0):
+    gauss_1d = cv2.getGaussianKernel(ksize=3, sigma=sigma)
+    Gy = np.array([-1.0, 0.0, 1.0])
+    smoooth_Gy = np.multiply(Gy, gauss_1d).T
+    Iy = cv2.filter2D(src=I, ddepth=-1, kernel=smoooth_Gy)
+    return Iy
+
+
+def get_corners(H: np.ndarray, threshold: float, window_size: int):
+    H_local_max = maximum_filter(H, size=window_size)
+    H[H < H_local_max] = 0.0
+    r, c = np.where(H > threshold)
+    return r, c
+
+
+def harris_corner_detector(I: np.ndarray, threshold: float = 0.001, debug: bool = False, window_size: int = 5):
+    h, w = _check_image(I)
+
+    # computed Gaussian-smoothed derivative along x-axis
+    Ix = compute_Ix(I)
+
+    # computed Gaussian-smoothed derivative along y-axis
+    Iy = compute_Iy(I)
+
+    # compute second order derivative terms
+    IxIx = Ix ** 2
+    IyIy = Iy ** 2
+    IxIy = np.multiply(Ix, Iy)
+
+    # compute elements of Q matrix
+    gauss_1d = cv2.getGaussianKernel(ksize=3, sigma=1.0)
+    gauss_2d = np.outer(gauss_1d, gauss_1d)
+    A = cv2.filter2D(src=IxIx, ddepth=-1, kernel=gauss_2d)
+    B = cv2.filter2D(src=IxIy, ddepth=-1, kernel=gauss_2d)
+    C = cv2.filter2D(src=IyIy, ddepth=-1, kernel=gauss_2d)
+
+    # compute H
+    eigen_mul = np.multiply(A, C) - B ** 2
+    eigen_sum = A + C
+    H = eigen_mul - 0.04 * (eigen_sum ** 2)
+
+    if debug:
+        show_multiple_images([I, Ix, Iy, IxIx, IyIy, IxIy, H], grid=(1, 7), figsize=(20, 4), show=True)
+
+    r, c = get_corners(H, threshold=threshold, window_size=window_size)
+    
+    return H, r, c
+
+
+if __name__ == "__main__":
+    impath = "./images/toy/0001.jpg"
+    # impath = "./images/doll/0200.jpg"
+    I = cv2.imread(impath)
+    I = cv2.cvtColor(I, cv2.COLOR_BGR2GRAY)
+    I = I.astype(float) / 255.0
+
+    Ix = compute_Ix(I)
+    Iy = compute_Iy(I)
+    H, r, c = harris_corner_detector(I, debug=False)
+
+    show = True
+    if show:
+        fig, ax = plt.subplots(1, 3, figsize=(18, 6), constrained_layout=True)
+        ax[-1].axis("off")
+        ax[-1].imshow(I)
+        ax[-1].scatter(c, r, color="red", s=10, marker="o")
+        ax[-1].set_title("$I$ with Harris corners", fontsize=18)
+
+        ax[0].axis("off")
+        ax[0].imshow(Ix)
+        ax[0].set_title("$I_x$", fontsize=18)
+
+        ax[1].axis("off")
+        ax[1].imshow(Iy)
+        ax[1].set_title("$I_y$", fontsize=18)
+
+        plt.savefig(f"./results/harris_{basename(impath).split('.')[0]}.png", bbox_inches="tight")
+        plt.show()
+
