@@ -38,14 +38,20 @@ def get_corners(H: np.ndarray, threshold: float, window_size: int):
     return r, c
 
 
-def harris_corner_detector(I: np.ndarray, threshold: float = 0.001, debug: bool = False, window_size: int = 5):
+def harris_corner_detector(
+        I: np.ndarray,
+        gauss_sigma: float = 1.0,
+        threshold: float = 0.001,
+        debug: bool = False,
+        window_size: int = 5,
+    ):
     h, w = _check_image(I)
 
     # computed Gaussian-smoothed derivative along x-axis
-    Ix = compute_Ix(I)
+    Ix = compute_Ix(I, sigma=gauss_sigma)
 
     # computed Gaussian-smoothed derivative along y-axis
-    Iy = compute_Iy(I)
+    Iy = compute_Iy(I, sigma=gauss_sigma)
 
     # compute second order derivative terms
     IxIx = Ix ** 2
@@ -53,7 +59,7 @@ def harris_corner_detector(I: np.ndarray, threshold: float = 0.001, debug: bool 
     IxIy = np.multiply(Ix, Iy)
 
     # compute elements of Q matrix
-    gauss_1d = cv2.getGaussianKernel(ksize=3, sigma=1.0)
+    gauss_1d = cv2.getGaussianKernel(ksize=3, sigma=gauss_sigma)
     gauss_2d = np.outer(gauss_1d, gauss_1d)
     A = cv2.filter2D(src=IxIx, ddepth=-1, kernel=gauss_2d)
     B = cv2.filter2D(src=IxIy, ddepth=-1, kernel=gauss_2d)
@@ -72,9 +78,32 @@ def harris_corner_detector(I: np.ndarray, threshold: float = 0.001, debug: bool 
     return H, r, c
 
 
+def show_derivatives_and_corners(I, Ix, Iy, r, c, save=False, path="results/sample.png", show=False):
+    fig, ax = plt.subplots(1, 3, figsize=(18, 6), constrained_layout=True)
+    ax[-1].axis("off")
+    ax[-1].imshow(I)
+    ax[-1].scatter(c, r, color="red", s=10, marker="o")
+    ax[-1].set_title("$I$ with Harris corners", fontsize=18)
+
+    ax[0].axis("off")
+    ax[0].imshow(Ix)
+    ax[0].set_title("$I_x$", fontsize=18)
+
+    ax[1].axis("off")
+    ax[1].imshow(Iy)
+    ax[1].set_title("$I_y$", fontsize=18)
+
+    if save:
+        # path = f"./results/harris_{basename(impath).split('.')[0]}.png"
+        plt.savefig(path, bbox_inches="tight")
+
+    if show:
+        plt.show()
+
+
 if __name__ == "__main__":
-    impath = "./images/toy/0001.jpg"
-    # impath = "./images/doll/0200.jpg"
+    # impath = "./images/toy/0001.jpg"
+    impath = "./images/doll/0200.jpg"
     I = cv2.imread(impath)
     I = cv2.cvtColor(I, cv2.COLOR_BGR2GRAY)
     I = I.astype(float) / 255.0
@@ -83,22 +112,6 @@ if __name__ == "__main__":
     Iy = compute_Iy(I)
     H, r, c = harris_corner_detector(I, debug=False)
 
-    show = True
-    if show:
-        fig, ax = plt.subplots(1, 3, figsize=(18, 6), constrained_layout=True)
-        ax[-1].axis("off")
-        ax[-1].imshow(I)
-        ax[-1].scatter(c, r, color="red", s=10, marker="o")
-        ax[-1].set_title("$I$ with Harris corners", fontsize=18)
+    show_derivatives_and_corners(I, Ix, Iy, r, c, show=True)
 
-        ax[0].axis("off")
-        ax[0].imshow(Ix)
-        ax[0].set_title("$I_x$", fontsize=18)
-
-        ax[1].axis("off")
-        ax[1].imshow(Iy)
-        ax[1].set_title("$I_y$", fontsize=18)
-
-        plt.savefig(f"./results/harris_{basename(impath).split('.')[0]}.png", bbox_inches="tight")
-        plt.show()
-
+    # experiment 1: varying threshold
