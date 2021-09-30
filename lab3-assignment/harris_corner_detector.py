@@ -101,9 +101,17 @@ def show_derivatives_and_corners(I, Ix, Iy, r, c, save=False, path="results/samp
         plt.show()
 
 
+def rotate_image(I, angle):
+    h, w = _check_image(I)
+    I_center = tuple(h // 2, w // 2)
+    rot_mat = cv2.getRotationMatrix2D(I_center, angle, 1.0)
+    result = cv2.warpAffine(I, rot_mat, (h, w), flags=cv2.INTER_LINEAR)
+    return result
+
+
 if __name__ == "__main__":
-    # impath = "./images/toy/0001.jpg"
-    impath = "./images/doll/0200.jpg"
+    impath = "./images/toy/0001.jpg"
+    # impath = "./images/doll/0200.jpg"
     I = cv2.imread(impath)
     I = cv2.cvtColor(I, cv2.COLOR_BGR2GRAY)
     I = I.astype(float) / 255.0
@@ -115,3 +123,23 @@ if __name__ == "__main__":
     show_derivatives_and_corners(I, Ix, Iy, r, c, show=True)
 
     # experiment 1: varying threshold
+    thresholds = [0.0001, 0.001, 0.002, 0.005, 0.01]
+    R, C = [], []
+    for threshold in thresholds:
+        H, r, c = harris_corner_detector(I, threshold=threshold)
+        R.append(r)
+        C.append(c)
+    
+    fig, ax = plt.subplots(1, len(thresholds), figsize=(5 * len(thresholds), 5))
+    for i, th in enumerate(thresholds):
+        _ax = ax[i]
+        _ax.axis("off")
+        _ax.set_title(f"Threshold: {th}", fontsize=15)
+        _ax.imshow(I)
+        _ax.scatter(C[i], R[i], color="red", s=10, marker="o")
+    
+    save_path = f"./results/harris_threshold_{basename(impath).split('.')[0]}.png"
+    plt.savefig(save_path, bbox_inches="tight")
+    plt.show()
+
+    # experiment 2: checking rotation invariance
