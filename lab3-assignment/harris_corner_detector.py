@@ -102,10 +102,15 @@ def show_derivatives_and_corners(I, Ix, Iy, r, c, save=False, path="results/samp
 
 
 def rotate_image(I, angle):
+    """
+    Rotates image by a given angle (in degrees).
+
+    Inspired from: https://stackoverflow.com/questions/9041681/opencv-python-rotate-image-by-x-degrees-around-specific-point
+    """
     h, w = _check_image(I)
-    I_center = tuple(h // 2, w // 2)
+    I_center = (w // 2, h // 2)
     rot_mat = cv2.getRotationMatrix2D(I_center, angle, 1.0)
-    result = cv2.warpAffine(I, rot_mat, (h, w), flags=cv2.INTER_LINEAR)
+    result = cv2.warpAffine(I, rot_mat, (w, h), flags=cv2.INTER_LINEAR)
     return result
 
 
@@ -143,3 +148,33 @@ if __name__ == "__main__":
     plt.show()
 
     # experiment 2: checking rotation invariance
+    H, r, c = harris_corner_detector(I, debug=False)
+
+    # rotate by 45 degrees
+    I_45 = rotate_image(I, angle=45)
+    H_45, r_45, c_45 = harris_corner_detector(I_45, debug=False)
+
+    # rotate by 90 degrees
+    I_90 = rotate_image(I, angle=90)
+    H_90, r_90, c_90 = harris_corner_detector(I_90, debug=False)
+
+    fig, ax = plt.subplots(1, 3, figsize=(15, 5), constrained_layout=True)
+    ax[0].axis("off")
+    ax[0].imshow(I)
+    ax[0].scatter(c, r, color="red", s=10, marker="o")
+    ax[0].set_title("Original $I$", fontsize=15)
+
+    ax[1].axis("off")
+    ax[1].imshow(I_45)
+    ax[1].scatter(c_45, r_45, color="red", s=10, marker="o")
+    ax[1].set_title("$I$ rotated by $45^{o}$", fontsize=15)
+
+    ax[2].axis("off")
+    ax[2].imshow(I_90)
+    ax[2].scatter(c_90, r_90, color="red", s=10, marker="o")
+    ax[2].set_title("$I$ rotated by $90^{o}$", fontsize=15)
+
+    save_path = f"./results/harris_rotation_{basename(impath).split('.')[0]}.png"
+    plt.savefig(save_path, bbox_inches="tight")
+    plt.show()
+
