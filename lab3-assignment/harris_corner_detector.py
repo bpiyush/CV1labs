@@ -114,9 +114,8 @@ def rotate_image(I, angle):
     return result
 
 
-if __name__ == "__main__":
-    impath = "./images/toy/0001.jpg"
-    # impath = "./images/doll/0200.jpg"
+def demo(impath: str, show: bool = False):
+    """Runs Harris feature detection on a given image and displays result."""
     I = cv2.imread(impath)
     I = cv2.cvtColor(I, cv2.COLOR_BGR2GRAY)
     I = I.astype(float) / 255.0
@@ -125,7 +124,15 @@ if __name__ == "__main__":
     Iy = compute_Iy(I)
     H, r, c = harris_corner_detector(I, debug=False)
 
-    show_derivatives_and_corners(I, Ix, Iy, r, c, show=True)
+    show_derivatives_and_corners(I, Ix, Iy, r, c, show=show)
+
+    return H, r, c, I, Ix, Iy
+
+if __name__ == "__main__":
+    impath = "./images/toy/0001.jpg"
+    # impath = "./images/doll/0200.jpg"
+
+    H, r, c, I, Ix, Iy = demo(impath, show=True)
 
     # experiment 1: varying threshold
     thresholds = [0.0001, 0.001, 0.002, 0.005, 0.01]
