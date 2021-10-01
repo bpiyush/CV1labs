@@ -1,10 +1,13 @@
 import cv2
+import sys
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.signal
 
 
-def get_tiles(image):
+def get_tiles(image, tile_size=15):
+    """Splits the image into non overlapping regions of size tile_size x tile_size"""
+    h, w = image.shape
     tiles = []
     num_tiles_x = int(np.floor(w / tile_size))
     num_tiles_y = int(np.floor(h / tile_size))
@@ -31,22 +34,24 @@ def compute_gradient(old_frame, new_frame):
     return Gx, Gy, Gt
 
 
-# In[47]:
+def is_matrix_singular(mat):
+    return np.linalg.cond(mat) > 1 / sys.float_info.epsilon
 
 
-def lucas_kanade(im1, im2, make_plot=False):
+def lucas_kanade(im1, im2, make_plot=False, tile_size=15):
+    h, w = im1.shape
     Gx, Gy, Gt = compute_gradient(im1, im2)
-    tiles_gx = get_tiles(Gx)
-    tiles_gy = get_tiles(Gy)
-    tiles_gt = get_tiles(Gt)
+    tiles_gx = get_tiles(Gx, tile_size)
+    tiles_gy = get_tiles(Gy, tile_size)
+    tiles_gt = get_tiles(Gt, tile_size)
     V = []
 
     for i in range(len(tiles_gx)):
         gx, gy, gt = [x.flatten() for x in [tiles_gx[i], tiles_gy[i], tiles_gt[i]]]
         A = np.vstack((gx, gy)).T
-        try:
-            v = np.linalg.pinv(A) @ -gt  # fails if A is singular
-        except:
+        if not is_matrix_singular(A):
+            v = np.linalg.pinv(A) @ -gt
+        else:
             v = [0, 0]
         V.append(v)
     V = np.array(V)
@@ -60,8 +65,7 @@ def lucas_kanade(im1, im2, make_plot=False):
         plt.quiver(P[:, 1].astype(int), P[:, 0].astype(int), V[:, 0], V[:, 1], angles='xy', scale_units="xy", scale=0.1)
         plt.show()
 
-# im1 = cv2.imread('images/Coke1.jpg', cv2.IMREAD_GRAYSCALE)
-# im2 = cv2.imread('images/Coke2.jpg', cv2.IMREAD_GRAYSCALE)
-# tile_size = 15
-# h, w = im1.shape
+
+# im1 = cv2.imread('images/Car1.jpg', cv2.IMREAD_GRAYSCALE)
+# im2 = cv2.imread('images/Car2.jpg', cv2.IMREAD_GRAYSCALE)
 # lucas_kanade(im1, im2, make_plot=True)
