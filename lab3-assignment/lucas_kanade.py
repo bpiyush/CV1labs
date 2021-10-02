@@ -60,17 +60,18 @@ def lucas_kanade(im1, im2, make_plot=False, tile_size=15):
     P = np.array([[a, b] for a in Y for b in X])
 
     if make_plot:
-        fig = plt.figure(figsize=(10, 10))
+        fig = plt.figure(figsize=(10, 5))
         plt.title("Lucas-Kanade Optical Flow Quiver Plot")
         plt.imshow(im1)
         plt.quiver(P[:, 1].astype(int), P[:, 0].astype(int), V[:, 0], V[:, 1], angles='xy', scale_units="xy", scale=0.1)
         plt.show()
 
 
-def demo():
-    im1 = cv2.imread('images/Car1.jpg', cv2.IMREAD_GRAYSCALE)
-    im2 = cv2.imread('images/Car2.jpg', cv2.IMREAD_GRAYSCALE)
+def demo(im1_path='images/Car1.jpg', im2_path='images/Car2.jpg'):
+    im1 = cv2.imread(im1_path, cv2.IMREAD_GRAYSCALE)
+    im2 = cv2.imread(im2_path, cv2.IMREAD_GRAYSCALE)
     lucas_kanade(im1, im2, make_plot=True)
 
 
-# demo()
+if __name__ == "__main__":
+    demo(im1_path='images/Coke1.jpg', im2_path='images/Coke2.jpg')
