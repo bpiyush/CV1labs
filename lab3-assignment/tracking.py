@@ -24,16 +24,13 @@ def read_image(impath, convert=cv2.COLOR_BGR2RGB, normalize=True):
     return I
 
 
-if __name__ == "__main__":
-    example = "toy"
-    impaths = glob(join("images", example, "*.jpg"))
-    impaths = sorted(impaths)
-
+def track(impaths: list, harris_threshold=0.0001, scale_vel=5):
+    """Tracks a set of detected feature points for given images."""
     print(f"::::::::::: Running tracking for {len(impaths)} images :::::::::::")
     I0 = read_image(impaths[0], convert=cv2.COLOR_BGR2GRAY)
 
     # detecting corners for first frame
-    H, R, C = harris_corner_detector(I0, threshold=0.0001)
+    H, R, C = harris_corner_detector(I0, threshold=harris_threshold)
     # show_derivatives_and_corners(I0, I0, I0, R, C, show=True)
 
     assert len(R) == len(C)
@@ -64,8 +61,8 @@ if __name__ == "__main__":
         # get points for the new image ((x, y) + (Vx, Vy))
         H, W = I_curr.shape
         points_next = points_curr.copy()
-        points_next[:, 0] += (V[:, 1] * 5).astype(int)
-        points_next[:, 1] += (V[:, 0] * 5).astype(int)
+        points_next[:, 0] += (V[:, 1] * scale_vel).astype(int)
+        points_next[:, 1] += (V[:, 0] * scale_vel).astype(int)
 
         # remove points that go outside the image
         indices = np.where(np.add(points_next[:, 0] > H, points_next[:, 1] > W))[0]
@@ -75,7 +72,11 @@ if __name__ == "__main__":
         points_with_t.append(points_next)
         images_with_t.append(I_next)
 
-    # make a video
+    return points_with_t, images_with_t, V_with_t
+
+
+def save_optical_flow_video(points_with_t, images_with_t, V_with_t, path):
+    """Saves video of the computed optical flow tracker."""
     video_frames = []
 
     fig = plt.figure()
@@ -95,7 +96,6 @@ if __name__ == "__main__":
         points = points_with_t[i]
         V = V_with_t[i]
 
-        # Clears the entire current figure with all its axes, but leaves the window.
         plt.clf()
         plt.imshow(image)
         plt.quiver(points[:, 1], points[:, 0], V[:, 0], V[:, 1], angles='xy', scale_units='xy', scale=0.05)
@@ -106,7 +106,19 @@ if __name__ == "__main__":
         img_plot = np.reshape(img_plot, fig.canvas.get_width_height()[::-1]+(3,))
         img_plot = cv2.cvtColor(img_plot, cv2.COLOR_BGR2RGB)
         video_frames.append(img_plot)
-    
-    path = f"results/{example}_flow.avi"
+
     make_video(video_frames, path=path, convert_to_rgb=False)
+
+
+if __name__ == "__main__":
+    example = "doll"
+    impaths = glob(join("images", example, "*.jpg"))
+    impaths = sorted(impaths)
+
+    # track using optical flow
+    points_with_t, images_with_t, V_with_t = track(impaths)
+
+    # make a video
+    path = f"results/{example}_flow.avi"
+    save_optical_flow_video(points_with_t, images_with_t, V_with_t, path)
 
