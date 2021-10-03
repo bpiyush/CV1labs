@@ -1,5 +1,6 @@
 """Script to implement feature tracking."""
 from os.path import join, exists
+from IPython.core.pylabtools import figsize
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
@@ -89,7 +90,7 @@ def save_optical_flow_video(points_with_t, images_with_t, V_with_t, path):
     plt.pause(0.0001)
     img_plot = np.frombuffer(fig.canvas.tostring_rgb(), dtype=np.uint8)
     img_plot = np.reshape(img_plot, fig.canvas.get_width_height()[::-1] + (3,))
-    img_plot = cv2.cvtColor(img_plot, cv2.COLOR_BGR2RGB)
+    img_plot = cv2.cvtColor(img_plot, cv2.COLOR_RGB2BGR)
     video_frames.append(img_plot)
 
     for i in range(1, len(images_with_t)):
@@ -106,8 +107,17 @@ def save_optical_flow_video(points_with_t, images_with_t, V_with_t, path):
         plt.pause(0.0001)
         img_plot = np.frombuffer(fig.canvas.tostring_rgb(), dtype=np.uint8)
         img_plot = np.reshape(img_plot, fig.canvas.get_width_height()[::-1]+(3,))
-        img_plot = cv2.cvtColor(img_plot, cv2.COLOR_BGR2RGB)
+        img_plot = cv2.cvtColor(img_plot, cv2.COLOR_RGB2BGR)
         video_frames.append(img_plot)
+
+    # save certain frames to put in report
+    selected_frames = np.linspace(0, len(video_frames) - 1, 6, dtype=int)
+    selected_frames = np.array(video_frames)[selected_frames]
+    fig, ax = plt.subplots(1, len(selected_frames), figsize=(15, 3), constrained_layout=True)
+    for i in range(len(ax)):
+        ax[i].axis("off")
+        ax[i].imshow(cv2.cvtColor(selected_frames[i], cv2.COLOR_BGR2RGB))
+    plt.savefig(path.replace("avi", "png"), bbox_inches="tight")
 
     make_video(video_frames, path=path, convert_to_rgb=False)
 
