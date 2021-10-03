@@ -33,7 +33,7 @@ if __name__ == "__main__":
     I0 = read_image(impaths[0], convert=cv2.COLOR_BGR2GRAY)
 
     # detecting corners for first frame
-    H, R, C = harris_corner_detector(I0)
+    H, R, C = harris_corner_detector(I0, threshold=0.0001)
     # show_derivatives_and_corners(I0, I0, I0, R, C, show=True)
 
     assert len(R) == len(C)
@@ -98,8 +98,7 @@ if __name__ == "__main__":
         # Clears the entire current figure with all its axes, but leaves the window.
         plt.clf()
         plt.imshow(image)
-        # plt.scatter(points[:, 1], points[:, 0], c='red', marker='.')
-        plt.quiver(points[:, 1], points[:, 0], V[:, 0], V[:, 1], angles='xy', scale_units='xy', scale=0.1)
+        plt.quiver(points[:, 1], points[:, 0], V[:, 0], V[:, 1], angles='xy', scale_units='xy', scale=0.05)
         plt.draw()
         plt.axis("off")
         plt.pause(0.0001)
