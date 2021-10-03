@@ -5,7 +5,7 @@ import cv2
 import matplotlib.pyplot as plt
 from glob import glob
 
-from lucas_kanade import lucas_kanade, lucas_kanade_for_points
+from lucas_kanade import lucas_kanade_for_points
 from harris_corner_detector import harris_corner_detector, show_derivatives_and_corners
 from utils import make_video
 
@@ -25,14 +25,15 @@ def read_image(impath, convert=cv2.COLOR_BGR2RGB, normalize=True):
     return I
 
 
-def track(impaths: list, harris_threshold=0.0001, scale_vel=5):
+def track(impaths: list, harris_threshold=0.0001, scale_vel=5, debug=False):
     """Tracks a set of detected feature points for given images."""
     print(f"::::::::::: Running tracking for {len(impaths)} images :::::::::::")
     I0 = read_image(impaths[0], convert=cv2.COLOR_BGR2GRAY)
 
     # detecting corners for first frame
     H, R, C = harris_corner_detector(I0, threshold=harris_threshold)
-    # show_derivatives_and_corners(I0, I0, I0, R, C, show=True)
+    if debug:
+        show_derivatives_and_corners(I0, I0, I0, R, C, show=True)
 
     assert len(R) == len(C)
     points = np.array([[R[i], C[i]] for i in range(len(R))])
