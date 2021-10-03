@@ -11,6 +11,7 @@ from utils import make_video
 
 
 def read_image(impath, convert=cv2.COLOR_BGR2RGB, normalize=True):
+    """Reads an image."""
     assert exists(impath), f"Given image does not exist at {impath}"
 
     I = cv2.imread(impath)
