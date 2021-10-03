@@ -2,6 +2,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from typing import List
+import cv2
 
 
 def show_multiple_images(
@@ -47,3 +48,18 @@ def show_multiple_images(
 
     if show:
         plt.show()
+
+
+def make_video(frames: list, fps=10, path="output.avi", convert_to_rgb=True):
+    height, width = frames[0].shape[:2]
+    writer = cv2.VideoWriter(path, cv2.VideoWriter_fourcc(*"MJPG"), fps, (width, height))
+
+    for frame in frames:
+
+        if convert_to_rgb:
+            frame = np.expand_dims(frame, 2)
+            frame = np.repeat(frame, 3, axis=2)
+
+        writer.write(frame.astype("uint8"))
+
+    writer.release()
