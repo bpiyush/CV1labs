@@ -27,7 +27,7 @@ class KeypointMatcher:
     def _show_matches(img1, kp1, img2, kp2, matches, K=10, figsize=(10, 5), drawMatches_args=dict(matchesThickness=3, singlePointColor=(0, 0, 0))):
         """Displays matches found in the image"""
         selected_matches = np.random.choice(matches, K)
-        img3 = cv2.drawMatches(boat1, kp1, boat2, kp2, selected_matches, outImg=None, **drawMatches_args)
+        img3 = cv2.drawMatches(img1, kp1, img2, kp2, selected_matches, outImg=None, **drawMatches_args)
         show_single_image(img3, figsize=figsize, title=f"Randomly selected K = {K} matches between the pair of images.")
         return img3
 
@@ -49,7 +49,7 @@ class KeypointMatcher:
         if show_matches:
             self._show_matches(img1, kp1, img2, kp2, matches)
 
-        return matches
+        return matches, kp1, des1, kp2, des2
 
 
 if __name__ == "__main__":
@@ -59,4 +59,4 @@ if __name__ == "__main__":
     show_two_images(boat1, boat2, title="Sample pair of images.")
 
     kp_matcher = KeypointMatcher(contrastThreshold=0.1, edgeThreshold=5)
-    matches = kp_matcher.match(boat1, boat2, show_matches=True)
+    matches, kp1, des1, kp2, des2 = kp_matcher.match(boat1, boat2, show_matches=True)
