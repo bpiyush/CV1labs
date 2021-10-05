@@ -53,7 +53,7 @@ class KeypointMatcher:
 
 
 if __name__ == "__main__":
-    # read images
+    # read & show images
     boat1 = cv2.imread('boat1.pgm', cv2.IMREAD_GRAYSCALE)
     boat2 = cv2.imread('boat2.pgm', cv2.IMREAD_GRAYSCALE)
     show_two_images(boat1, boat2, title="Sample pair of images.")
