@@ -26,7 +26,7 @@ from utils import show_single_image, show_two_images
 #     X_ = inv_homogenize(X_)
 #     return X_
 
-def special_stretch(X: np.ndarray):
+def project_2d_to_6d(X: np.ndarray):
     """Projects X (N x 2) to Z (2N x 6) space."""
     N = len(X)
     assert X.shape == (N, 2)
@@ -42,7 +42,7 @@ def special_stretch(X: np.ndarray):
     return Z
 
 
-def inverse_stretch(Z: np.ndarray):
+def project_6d_to_2d(Z: np.ndarray):
     """Projects Z (2N x 6) to X (N x 2) space."""
     N = len(Z) // 2
     assert Z.shape == (2 * N, 6)
@@ -55,7 +55,8 @@ def inverse_stretch(Z: np.ndarray):
 
 
 
-def stretch_to_1d(X: np.ndarray):
+def project_2d_to_1d(X: np.ndarray):
+    """Returns X (N x 2) from Z (2N, 1)"""
     N = len(X)
     X_stretched = np.zeros(2 * N)
     X_stretched[::2] = X[:, 0]
@@ -63,7 +64,7 @@ def stretch_to_1d(X: np.ndarray):
     return X_stretched
 
 
-def special_shorten(Z: np.ndarray):
+def project_1d_to_2d(Z: np.ndarray):
     """Returns X (N x 2) from Z (2N, 1)"""
     N = len(Z) // 2
     assert Z.shape == (2 * N,)
@@ -80,10 +81,10 @@ def rigid_body_transform(X: np.ndarray, params: np.ndarray):
     N = len(X)
     assert X.shape == (N, 2)
 
-    X = special_stretch(X)
+    X = project_2d_to_6d(X)
 
     X_transformed = np.matmul(X, params)
-    X_transformed = special_shorten(X_transformed)
+    X_transformed = project_1d_to_2d(X_transformed)
     assert X_transformed.shape == (N, 2)
 
     return X_transformed
@@ -96,10 +97,10 @@ def rigid_body_transform_params(X1: np.ndarray, X2: np.ndarray):
     assert X1.shape == (N, 2)
 
     # X2 = X1 * params => params = psuedoinverse(X1) * X2
-    X1_expanded = special_stretch(X1)
+    X1_expanded = project_2d_to_6d(X1)
     assert X1_expanded.shape == (2 * N, 6)
 
-    X2_stretched = stretch_to_1d(X2)
+    X2_stretched = project_2d_to_1d(X2)
     assert X2_stretched.shape == (2 * N,)
 
     params = np.dot(np.linalg.pinv(X1_expanded), X2_stretched)
@@ -236,8 +237,8 @@ if __name__ == "__main__":
             [0.0, 0.0, 1.0],
         ]
     )
-    Z = special_stretch(X)
-    X_ = inverse_stretch(Z)
+    Z = project_2d_to_6d(X)
+    X_ = project_6d_to_2d(Z)
 
     params = np.hstack([RT[:2, :2].flatten(), RT[:2, 2].flatten()])
     X_transformed = rigid_body_transform(X, params)
