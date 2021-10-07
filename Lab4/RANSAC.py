@@ -174,8 +174,8 @@ class ImageAlignment:
 
         return best_params
     
-    def align(self, img1, kp1, img2, kp2, matches, show_warped_image=True, save_warped=False, path="results/sample.png"):
-        best_params = self.ransac(img1, kp1, img2, kp2, matches)
+    def align(self, img1, kp1, img2, kp2, matches, max_iter=500, show_warped_image=True, save_warped=False, path="results/sample.png"):
+        best_params = self.ransac(img1, kp1, img2, kp2, matches, max_iter=max_iter)
 
         # apply the affine transformation using cv2.warpAffine()
         rows, cols = img1.shape[:2]
@@ -249,12 +249,13 @@ if __name__ == "__main__":
 
     # experiment 1: varying number of maximum iterations
     run_expt = False
+    np.random.seed(12345)
     iters = [10, 50, 100, 200, 500]
     for iter in iters:
         print(f"::::: Running alignment for max. {iter} iterations")
         if run_expt:
             best_params = image_alignment.align(
-                boat1, kp1, boat2, kp2, matches,
+                boat1, kp1, boat2, kp2, matches, max_iter=iter,
                 save_warped=True, path=f"results/img1_warped_iter_{iter}.png", show_warped_image=False,
             )
 
