@@ -2,6 +2,7 @@
 
 import numpy as np
 import cv2
+import matplotlib.pyplot as plt
 
 from keypoint_matching import KeypointMatcher
 from utils import show_single_image, show_two_images, show_three_images
@@ -121,7 +122,7 @@ class ImageAlignment:
 
         return RT, X1_homo, X2_homo
 
-    def ransac(self, img1, kp1, img2, kp2, matches, num_matches=6, max_iter=1000, radius_in_px=10, show_transformed=False):
+    def ransac(self, img1, kp1, img2, kp2, matches, num_matches=6, max_iter=500, radius_in_px=10, show_transformed=False):
         """Performs RANSAC to find best matches."""
 
         best_inlier_count = 0
@@ -173,24 +174,28 @@ class ImageAlignment:
 
         return best_params
     
-    def align(self, img1, kp1, img2, kp2, matches, show_warped_image=True):
+    def align(self, img1, kp1, img2, kp2, matches, show_warped_image=True, save_warped=False, path="results/sample.png"):
         best_params = self.ransac(img1, kp1, img2, kp2, matches)
 
+        # apply the affine transformation using cv2.warpAffine()
+        rows, cols = img1.shape[:2]
+
+        M = np.zeros((2, 3))
+        M[0, :2] = best_params[:2]
+        M[1, :2] = best_params[2:4]
+        M[0, 2] = best_params[4]
+        M[1, 2] = best_params[5]
+
+        img1_warped = cv2.warpAffine(img1, M, (cols, rows))
+
         if show_warped_image:
-            # apply the affine transformation using cv2.warpAffine()
-            rows, cols = img1.shape[:2]
-
-            M = np.zeros((2, 3))
-            M[0, :2] = best_params[:2]
-            M[1, :2] = best_params[2:4]
-            M[0, 2] = best_params[4]
-            M[1, 2] = best_params[5]
-
-            img1_warped = cv2.warpAffine(img1, M, (cols, rows))
             show_three_images(
                 img1, img2, img1_warped, title="",
-                ax1_title="Image 1", ax2_title="Image 2", ax3_title="Image 1 transformed",
+                ax1_title="Image 1", ax2_title="Image 2", ax3_title="Transformation: Image 1 to Image 2",
             )
+
+        if save_warped:
+            plt.imsave(path, img1_warped)
 
         return best_params
 
@@ -233,13 +238,23 @@ if __name__ == "__main__":
     # read & show images
     boat1 = cv2.imread('boat1.pgm', cv2.IMREAD_GRAYSCALE)
     boat2 = cv2.imread('boat2.pgm', cv2.IMREAD_GRAYSCALE)
-    show_two_images(boat1, boat2, title="Sample pair of images.")
+    show_two_images(boat1, boat2, title="Given pair of images.")
 
     # get matches
     kp_matcher = KeypointMatcher(contrastThreshold=0.1, edgeThreshold=5)
     matches, kp1, des1, kp2, des2 = kp_matcher.match(boat1, boat2, show_matches=True)
 
     image_alignment = ImageAlignment()
-    image_alignment.align(boat1, kp1, boat2, kp2, matches)
+    best_params = image_alignment.align(boat1, kp1, boat2, kp2, matches, show_warped_image=True)
 
+    # experiment 1: varying number of maximum iterations
+    run_expt = False
+    iters = [10, 50, 100, 200, 500]
+    for iter in iters:
+        print(f"::::: Running alignment for max. {iter} iterations")
+        if run_expt:
+            best_params = image_alignment.align(
+                boat1, kp1, boat2, kp2, matches,
+                save_warped=True, path=f"results/img1_warped_iter_{iter}.png", show_warped_image=False,
+            )
 

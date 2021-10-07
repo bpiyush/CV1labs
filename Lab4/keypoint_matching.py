@@ -56,7 +56,7 @@ if __name__ == "__main__":
     # read & show images
     boat1 = cv2.imread('boat1.pgm', cv2.IMREAD_GRAYSCALE)
     boat2 = cv2.imread('boat2.pgm', cv2.IMREAD_GRAYSCALE)
-    show_two_images(boat1, boat2, title="Sample pair of images.")
+    show_two_images(boat1, boat2, title="Given pair of images.")
 
     kp_matcher = KeypointMatcher(contrastThreshold=0.1, edgeThreshold=5)
     matches, kp1, des1, kp2, des2 = kp_matcher.match(boat1, boat2, show_matches=True)
