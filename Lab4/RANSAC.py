@@ -4,7 +4,7 @@ import numpy as np
 import cv2
 
 from keypoint_matching import KeypointMatcher
-from utils import show_single_image, show_two_images
+from utils import show_single_image, show_two_images, show_three_images
 
 
 def project_2d_to_6d(X: np.ndarray):
@@ -121,24 +121,30 @@ class ImageAlignment:
 
         return RT, X1_homo, X2_homo
 
-    def ransac(self, img1, kp1, img2, kp2, matches, num_matches=100, max_iter=10, radius_in_px=10, show_transformed=False):
+    def ransac(self, img1, kp1, img2, kp2, matches, num_matches=6, max_iter=1000, radius_in_px=10, show_transformed=False):
         """Performs RANSAC to find best matches."""
 
         best_inlier_count = 0
         best_params = None
+
+        # get coordinates of all points in image 1
+        X1 = np.array([kp1[matches[i].queryIdx].pt for i in range(len(matches))])
+
+        # get coordinates of all points in image 2
+        X2 = np.array([kp2[matches[i].trainIdx].pt for i in range(len(matches))])
 
         for i in range(max_iter):
             # choose matches randomly
             selected_matches = np.random.choice(matches, num_matches)
 
             # get matched keypoints in img1
-            X1 = np.array([kp1[matches[i].queryIdx].pt for i in range(len(matches))])
+            X1_selected = np.array([kp1[selected_matches[i].queryIdx].pt for i in range(len(selected_matches))])
 
             # get matched keypoints in img2
-            X2 = np.array([kp2[matches[i].trainIdx].pt for i in range(len(matches))])
+            X2_selected = np.array([kp2[selected_matches[i].trainIdx].pt for i in range(len(selected_matches))])
 
             # get transformation parameters
-            params = rigid_body_transform_params(X1, X2)
+            params = rigid_body_transform_params(X1_selected, X2_selected)
             
             # transform X1 to get X2_transformed
             X2_transformed = rigid_body_transform(X1, params)
@@ -152,27 +158,41 @@ class ImageAlignment:
                 best_params = params
                 best_inlier_count = num_inliers
 
-                # show matches
-                selected_kp1 = [kp1[m.queryIdx] for m in selected_matches]
-                selected_kp2 = [kp2[m.trainIdx] for m in selected_matches]
-                selected_kp2_transformed = []
-                _selected_matches = []
-                for i in range(len(selected_matches)):
-                    xy = cv2.KeyPoint(*X2_transformed[i].astype("uint8"), size=selected_kp2[i].size)
-                    selected_kp2_transformed.append(xy)
+                if show_transformed:
+                    # TODO: debug and fix this visualization
+                    kp2_transformed = []
+                    for i in range(len(matches)):
+                        idx = matches[i].trainIdx
+                        xy = cv2.KeyPoint(*X2_transformed[i].astype("uint8"), size=kp2[idx].size)
+                        kp2_transformed.append(xy)
 
-                    _match = selected_matches[i]
-                    _match.queryIdx = i
-                    _match.trainIdx = i
-                    _selected_matches.append(_match)
+                    img = cv2.drawMatches(img1, kp1, img2, kp2, matches, outImg=None, matchColor=0, matchesThickness=3, singlePointColor=(0, 0, 0))
+                    show_single_image(img)
+                    img = cv2.drawMatches(img1, kp1, img2, kp2_transformed, matches, outImg=img, matchColor=110, matchesThickness=3, singlePointColor=(0, 0, 0))
+                    show_single_image(img)
 
-                img = cv2.drawMatches(img1, selected_kp1, img2, selected_kp2, _selected_matches, outImg=None, matchColor=0, matchesThickness=3, singlePointColor=(0, 0, 0))
-                show_single_image(img)
-                img = cv2.drawMatches(img1, selected_kp1, img2, selected_kp2_transformed, _selected_matches, outImg=img, matchColor=110, matchesThickness=3, singlePointColor=(0, 0, 0))
-                show_single_image(img)
+        return best_params
     
-    def align(self, img1, kp1, img2, kp2, matches):
-        self.ransac(img1, kp1, img2, kp2, matches)
+    def align(self, img1, kp1, img2, kp2, matches, show_warped_image=True):
+        best_params = self.ransac(img1, kp1, img2, kp2, matches)
+
+        if show_warped_image:
+            # apply the affine transformation using cv2.warpAffine()
+            rows, cols = img1.shape[:2]
+
+            M = np.zeros((2, 3))
+            M[0, :2] = best_params[:2]
+            M[1, :2] = best_params[2:4]
+            M[0, 2] = best_params[4]
+            M[1, 2] = best_params[5]
+
+            img1_warped = cv2.warpAffine(img1, M, (cols, rows))
+            show_three_images(
+                img1, img2, img1_warped, title="",
+                ax1_title="Image 1", ax2_title="Image 2", ax3_title="Image 1 transformed",
+            )
+
+        return best_params
 
 
 def test_individual_functions():
