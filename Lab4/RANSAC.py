@@ -95,33 +95,6 @@ class ImageAlignment:
     def __init__(self) -> None:
         pass
 
-    def get_transformation(self, kp1, kp2, matches):
-        """Returns transformation parameters (rotation, translation) for given matches."""
-        # get matched keypoints in img1
-        X1 = np.array([kp1[matches[i].queryIdx].pt for i in range(len(matches))])
-        # homogenize
-        X1_homo = np.hstack([X1, np.ones((len(X1), 1))])
-
-        # get matched keypoints in img2
-        X2 = np.array([kp2[matches[i].trainIdx].pt for i in range(len(matches))])
-        # homogenize
-        X2_homo = np.hstack([X2, np.ones((len(X2), 1))])
-
-        assert X1_homo.shape == X2_homo.shape
-
-        # find transformation points
-        RT = np.dot(np.linalg.pinv(X1_homo), X2_homo).T
-        import ipdb; ipdb.set_trace()
-        # check last row is [0, 0, 1]
-        assert np.linalg.norm(np.linalg.norm(RT[-1, :] - np.array([1e-10, 1e-10, 1.0]))) < 1e-6
-
-        # m1, m2, m3, m4 = RT[:-1, :-1].flatten()
-        # t1, t2 = RT[:1, -1]
-
-        # return m1, m2, m3, m4, t1, t2
-
-        return RT, X1_homo, X2_homo
-
     def ransac(self, img1, kp1, img2, kp2, matches, num_matches=6, max_iter=500, radius_in_px=10, show_transformed=False):
         """Performs RANSAC to find best matches."""
 
@@ -167,14 +140,24 @@ class ImageAlignment:
                         xy = cv2.KeyPoint(*X2_transformed[i].astype("uint8"), size=kp2[idx].size)
                         kp2_transformed.append(xy)
 
-                    img = cv2.drawMatches(img1, kp1, img2, kp2, matches, outImg=None, matchColor=0, matchesThickness=3, singlePointColor=(0, 0, 0))
+                    img = cv2.drawMatches(
+                        img1, kp1, img2, kp2, matches, outImg=None,
+                        matchColor=0, matchesThickness=3, singlePointColor=(0, 0, 0),
+                    )
                     show_single_image(img)
-                    img = cv2.drawMatches(img1, kp1, img2, kp2_transformed, matches, outImg=img, matchColor=110, matchesThickness=3, singlePointColor=(0, 0, 0))
+                    img = cv2.drawMatches(
+                        img1, kp1, img2, kp2_transformed, matches, outImg=img,
+                        matchColor=110, matchesThickness=3, singlePointColor=(0, 0, 0),
+                    )
                     show_single_image(img)
 
         return best_params
     
-    def align(self, img1, kp1, img2, kp2, matches, max_iter=500, show_warped_image=True, save_warped=False, path="results/sample.png"):
+    def align(
+            self, img1, kp1, img2, kp2, matches,
+            max_iter=500, show_warped_image=True,
+            save_warped=False, path="results/sample.png"
+        ):
         best_params = self.ransac(img1, kp1, img2, kp2, matches, max_iter=max_iter)
 
         # apply the affine transformation using cv2.warpAffine()
@@ -252,8 +235,8 @@ if __name__ == "__main__":
     np.random.seed(12345)
     iters = [10, 50, 100, 200, 500]
     for iter in iters:
-        print(f"::::: Running alignment for max. {iter} iterations")
         if run_expt:
+            print(f"::::: Running alignment for max. {iter} iterations")
             best_params = image_alignment.align(
                 boat1, kp1, boat2, kp2, matches, max_iter=iter,
                 save_warped=True, path=f"results/img1_warped_iter_{iter}.png", show_warped_image=False,
