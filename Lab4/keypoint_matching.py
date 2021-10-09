@@ -21,7 +21,7 @@ class KeypointMatcher:
         assert isinstance(img2, np.ndarray)
         assert len(img2.shape) == 2
 
-        assert img1.shape == img2.shape
+        # assert img1.shape == img2.shape
     
     @staticmethod
     def _show_matches(img1, kp1, img2, kp2, matches, K=10, figsize=(10, 5), drawMatches_args=dict(matchesThickness=3, singlePointColor=(0, 0, 0))):

@@ -3,6 +3,7 @@
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
+from matplotlib.pyplot import cm
 
 from keypoint_matching import KeypointMatcher
 from utils import show_single_image, show_two_images, show_three_images
@@ -94,8 +95,49 @@ class ImageAlignment:
 
     def __init__(self) -> None:
         pass
+    
+    @staticmethod
+    def show_transformed_points(img1, img2, X1, kp1, kp2, matches, params, num_inliers, num_to_show=20):
 
-    def ransac(self, img1, kp1, img2, kp2, matches, num_matches=6, max_iter=500, radius_in_px=10, show_transformed=False):
+        H1, W1 = img1.shape
+        H2, W2 = img2.shape
+        img = np.hstack([img1, img2])
+
+        random_matches = np.random.choice(matches, num_to_show)
+
+        fig, ax = plt.subplots(1, 1, figsize=(15, 6))
+        colors = cm.rainbow(np.linspace(0, 1, num_to_show))
+
+        for i, match in enumerate(random_matches):
+
+            # select a single match to visualize
+            x1, y1 = kp1[match.queryIdx].pt
+            x2, y2 = kp2[match.trainIdx].pt
+
+            # get (x1, y1) transformed to (x1_transformed, y1_transformed)
+            A = project_2d_to_6d(np.array([[x1, y1]]))
+            (x1_transformed, y1_transformed) = np.dot(A, params)
+
+            ax.imshow(img, cmap="gray")
+            ax.axis("off")
+            ax.scatter(x1_transformed + W1, y1_transformed, s=200, marker="x", color=colors[i])
+            ax.plot(
+                (x1, x1_transformed + W1), (y1, y1_transformed),
+                linestyle="--", color=colors[i], marker="o",
+            )
+
+        ax.set_title(
+            f"Points in image 1 mapped to transformed points estimated by {num_inliers} points.",
+            fontsize=18,
+        )
+
+        plt.savefig(f"./results/match_transformed_inliers_{num_inliers}.png", bbox_inches="tight")
+        plt.show()
+
+    def ransac(
+            self, img1, kp1, img2, kp2, matches, num_matches=6, max_iter=500,
+            radius_in_px=10, show_transformed=True, inlier_th_for_show=1000
+        ):
         """Performs RANSAC to find best matches."""
 
         best_inlier_count = 0
@@ -132,29 +174,13 @@ class ImageAlignment:
                 best_params = params
                 best_inlier_count = num_inliers
 
-                if show_transformed:
-                    # TODO: debug and fix this visualization
-                    kp2_transformed = []
-                    for i in range(len(matches)):
-                        idx = matches[i].trainIdx
-                        xy = cv2.KeyPoint(*X2_transformed[i].astype("uint8"), size=kp2[idx].size)
-                        kp2_transformed.append(xy)
-
-                    img = cv2.drawMatches(
-                        img1, kp1, img2, kp2, matches, outImg=None,
-                        matchColor=0, matchesThickness=3, singlePointColor=(0, 0, 0),
-                    )
-                    show_single_image(img)
-                    img = cv2.drawMatches(
-                        img1, kp1, img2, kp2_transformed, matches, outImg=img,
-                        matchColor=110, matchesThickness=3, singlePointColor=(0, 0, 0),
-                    )
-                    show_single_image(img)
+                if show_transformed and num_inliers > inlier_th_for_show:
+                    self.show_transformed_points(img1, img2, X1, kp1, kp2, matches, best_params, num_inliers)
 
         return best_params
     
     def align(
-            self, img1, kp1, img2, kp2, matches,
+            self, img1, kp1, img2, kp2, matches, num_matches=6,
             max_iter=500, show_warped_image=True,
             save_warped=False, path="results/sample.png"
         ):
