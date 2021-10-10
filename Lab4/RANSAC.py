@@ -184,7 +184,7 @@ class ImageAlignment:
             max_iter=500, show_warped_image=True,
             save_warped=False, path="results/sample.png"
         ):
-        best_params = self.ransac(img1, kp1, img2, kp2, matches, max_iter=max_iter)
+        best_params = self.ransac(img1, kp1, img2, kp2, matches, max_iter=max_iter, num_matches=num_matches)
 
         # apply the affine transformation using cv2.warpAffine()
         rows, cols = img1.shape[:2]
