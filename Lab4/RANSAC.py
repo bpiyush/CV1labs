@@ -9,6 +9,19 @@ from keypoint_matching import KeypointMatcher
 from utils import show_single_image, show_two_images, show_three_images
 
 
+def warp(im, M, output_shape):
+    out = np.zeros((output_shape[0], output_shape[1]))
+    for i in range(output_shape[0]):
+        for j in range(output_shape[1]):
+            u, v = np.array([[i, j, 0, 0, 1, 0], [0, 0, i, j, 0, 1]]) @ M
+            u = int(round(u))
+            v = int(round(v))
+            if im.shape[0] > u >= 0 and im.shape[1] > v >= 0:
+                out[i, j] = im[u, v]
+
+    return out
+
+
 def project_2d_to_6d(X: np.ndarray):
     """Projects X (N x 2) to Z (2N x 6) space."""
     N = len(X)
