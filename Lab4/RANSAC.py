@@ -215,7 +215,7 @@ class ImageAlignment:
 
         if show_warped_image:
             show_three_images(
-                img1, img2, np.pad(img1_warped, 100), title="",
+                img1, img2, img1_warped, title="",
                 ax1_title="Image 1", ax2_title="Image 2", ax3_title="Transformation: Image 1 to Image 2",
             )
 
