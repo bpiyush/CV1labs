@@ -195,24 +195,27 @@ class ImageAlignment:
     def align(
             self, img1, kp1, img2, kp2, matches, num_matches=6,
             max_iter=500, show_warped_image=True,
-            save_warped=False, path="results/sample.png"
+            save_warped=False, path="results/sample.png",
+            method="custom"
         ):
         best_params = self.ransac(img1, kp1, img2, kp2, matches, max_iter=max_iter, num_matches=num_matches)
 
         # apply the affine transformation using cv2.warpAffine()
         rows, cols = img1.shape[:2]
 
-        M = np.zeros((2, 3))
-        M[0, :2] = best_params[:2]
-        M[1, :2] = best_params[2:4]
-        M[0, 2] = best_params[4]
-        M[1, 2] = best_params[5]
-
-        img1_warped = cv2.warpAffine(img1, M, (cols, rows))
+        if method == 'custom':
+            img1_warped = warp(img1, best_params, (rows, cols))
+        else:
+            M = np.zeros((2, 3))
+            M[0, :2] = best_params[:2]
+            M[1, :2] = best_params[2:4]
+            M[0, 2] = best_params[4]
+            M[1, 2] = best_params[5]
+            img1_warped = cv2.warpAffine(img1, M, (cols, rows))
 
         if show_warped_image:
             show_three_images(
-                img1, img2, img1_warped, title="",
+                img1, img2, np.pad(img1_warped, 100), title="",
                 ax1_title="Image 1", ax2_title="Image 2", ax3_title="Transformation: Image 1 to Image 2",
             )
 
