@@ -9,6 +9,19 @@ from keypoint_matching import KeypointMatcher
 from utils import show_single_image, show_two_images, show_three_images
 
 
+def warp(im, M, output_shape):
+    out = np.zeros((output_shape[0], output_shape[1]))
+    for i in range(output_shape[0]):
+        for j in range(output_shape[1]):
+            u, v = np.array([[i, j, 0, 0, 1, 0], [0, 0, i, j, 0, 1]]) @ M
+            u = int(round(u))
+            v = int(round(v))
+            if im.shape[0] > u >= 0 and im.shape[1] > v >= 0:
+                out[i, j] = im[u, v]
+
+    return out
+
+
 def project_2d_to_6d(X: np.ndarray):
     """Projects X (N x 2) to Z (2N x 6) space."""
     N = len(X)
@@ -182,20 +195,23 @@ class ImageAlignment:
     def align(
             self, img1, kp1, img2, kp2, matches, num_matches=6,
             max_iter=500, show_warped_image=True,
-            save_warped=False, path="results/sample.png"
+            save_warped=False, path="results/sample.png",
+            method="custom"
         ):
         best_params = self.ransac(img1, kp1, img2, kp2, matches, max_iter=max_iter, num_matches=num_matches)
 
         # apply the affine transformation using cv2.warpAffine()
         rows, cols = img1.shape[:2]
 
-        M = np.zeros((2, 3))
-        M[0, :2] = best_params[:2]
-        M[1, :2] = best_params[2:4]
-        M[0, 2] = best_params[4]
-        M[1, 2] = best_params[5]
-
-        img1_warped = cv2.warpAffine(img1, M, (cols, rows))
+        if method == 'custom':
+            img1_warped = warp(img1, best_params, (rows, cols))
+        else:
+            M = np.zeros((2, 3))
+            M[0, :2] = best_params[:2]
+            M[1, :2] = best_params[2:4]
+            M[0, 2] = best_params[4]
+            M[1, 2] = best_params[5]
+            img1_warped = cv2.warpAffine(img1, M, (cols, rows))
 
         if show_warped_image:
             show_three_images(
@@ -265,6 +281,6 @@ if __name__ == "__main__":
             print(f"::::: Running alignment for max. {iter} iterations")
             best_params = image_alignment.align(
                 boat1, kp1, boat2, kp2, matches, max_iter=iter,
-                save_warped=True, path=f"results/img1_warped_iter_{iter}.png", show_warped_image=False,
+                save_warped=True, path=f"results/img1_warped_iter_{iter}.png", show_warped_image=False, method="custom"
             )
 
