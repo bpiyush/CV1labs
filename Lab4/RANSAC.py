@@ -281,6 +281,6 @@ if __name__ == "__main__":
             print(f"::::: Running alignment for max. {iter} iterations")
             best_params = image_alignment.align(
                 boat1, kp1, boat2, kp2, matches, max_iter=iter,
-                save_warped=True, path=f"results/img1_warped_iter_{iter}.png", show_warped_image=False,
+                save_warped=True, path=f"results/img1_warped_iter_{iter}.png", show_warped_image=False, method="custom"
             )
 
