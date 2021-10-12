@@ -121,23 +121,6 @@ class ImageStitching:
 
         self.show_canvas(canvas, subcanvas, C2_as_viewed_from_1, X_left, Y_top, W_new, H_new)
 
-        # fig, ax = plt.subplots(1, 1, figsize=(13, 7), dpi=100)
-
-        # ax.imshow(canvas.astype(int), alpha=0.6)
-        # ax.imshow(subcanvas.astype(int), alpha=0.4)
-        # ax.scatter(C2_as_viewed_from_1[:, 0], C2_as_viewed_from_1[:, 1], c="red", label="Corners of Image 2 transformed")
-
-        # stiched_image_rect = Rectangle(
-        #     (X_left, Y_top), W_new, H_new, fc='none', ec='limegreen', lw=1, label="Border of stiched image",
-        # )
-        # ax.add_patch(stiched_image_rect)
-
-        # title = "Image 1 (Left), Image 2 (Right) and Image 2 transformed (middle) based on estimated affine parameters."
-        # ax.set_title(title, fontsize=13)
-
-        # plt.legend(loc="lower right")
-        # plt.show()
-
         # merge images with weighted sub over pixels
         merged_image = np.zeros(canvas.shape)
         merging_weights_1 = np.zeros(canvas.shape)
@@ -226,17 +209,4 @@ def demo(img1_path, img2_path):
 
 
 if __name__ == "__main__":
-    # read & show images
-    # left = cv2.imread('left.jpg')
-    # left = cv2.cvtColor(left, cv2.COLOR_BGR2RGB)
-    # left_gray = cv2.cvtColor(left, cv2.COLOR_RGB2GRAY)
-    # right = cv2.imread('right.jpg')
-    # right = cv2.cvtColor(right, cv2.COLOR_BGR2RGB)
-    # right_gray = cv2.cvtColor(right, cv2.COLOR_RGB2GRAY)
-    # show_two_images(left, right, title="Given pair of images.")
-
-    # initialize stitcher
-    # image_stitching = ImageStitching()
-    # stitched = image_stitching.stitch(left, right)
-
     stitched = demo("left.jpg", "right.jpg")
