@@ -1,5 +1,5 @@
 """Performs RANSAC to find the best matches between an image pair."""
-
+import os
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
@@ -144,6 +144,7 @@ class ImageAlignment:
             fontsize=18,
         )
 
+        os.makedirs("./results/", exist_ok=True)
         plt.savefig(f"./results/match_transformed_inliers_{num_inliers}.png", bbox_inches="tight")
         plt.show()
 

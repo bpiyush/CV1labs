@@ -1,4 +1,5 @@
 """Script to stitch a pair of images."""
+import os
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
@@ -26,7 +27,7 @@ class ImageStitching:
         image_alignment = ImageAlignment(**align_args)
         best_params = image_alignment.align(
             img1, kp1, img2, kp2, matches,
-            show_warped_image=True, num_matches=4, max_iter=2000,
+            show_warped_image=True, num_matches=4, max_iter=2000, method="cv2",
         )
 
         return matches, kp1, des1, kp2, des2, best_params
@@ -184,6 +185,7 @@ class ImageStitching:
         ax[2].axis("off")
 
         f.tight_layout()
+        os.makedirs("./results/", exist_ok=True)
         f.savefig('./results/all_stiched.png', bbox_inches="tight")
         plt.show()
 
