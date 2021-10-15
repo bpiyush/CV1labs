@@ -1,3 +1,7 @@
+# ignore data folder
+**/data/*
+*.pkl
+
 # Mac
 *__MACOSX*
 
