@@ -1,6 +1,8 @@
 """Common helper functions."""
 from os import makedirs
 from os.path import dirname
+import numpy as np
+import cv2
 import matplotlib.pyplot as plt
 
 
