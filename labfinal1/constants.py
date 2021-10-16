@@ -1,6 +1,9 @@
 """Defines constants used throughout the project."""
 import numpy as np
 
+# dataset dir
+DATA_DIR = "./data/stl10_binary"
+
 # define index to class mapping
 path = "./data/stl10_binary/class_names.txt"
 classes = open(path, "rb").read().decode("utf-8").split("\n")[:-1]

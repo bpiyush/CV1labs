@@ -96,14 +96,15 @@ def show_many_images(
         plt.show()
 
 
-def show_matches(
-        img1, kp1, img2, kp2, matches,
-        K=10, figsize=(10, 5),
-        drawMatches_args=dict(matchesThickness=3,
-        singlePointColor=(0, 0, 0)),
-    ):
-    """Displays matches found in the image"""
-    selected_matches = np.random.choice(matches, K)
-    img3 = cv2.drawMatches(img1, kp1, img2, kp2, selected_matches, outImg=None, **drawMatches_args)
-    show_single_image(img3, figsize=figsize, title=f"Randomly selected K = {K} matches between the pair of images.")
-    return img3
+def mark_kps_on_image(image, kps, color=(0, 255, 0), kps_with_size=True):
+
+    if kps_with_size:
+        flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS
+    else:
+        flags=0
+
+    image_with_kps = cv2.drawKeypoints(
+        image, kps, None, color=color,
+        flags=flags,
+    )
+    return image_with_kps
