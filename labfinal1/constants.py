@@ -11,3 +11,6 @@ idx_to_class = {k + 1: v for (k, v) in enumerate(classes)}
 
 # classes to be used for classification (copied from stl)
 relevant_classes = np.array([1, 2, 9, 7, 3])
+
+NUM_TRAIN_SAMPLES_PER_CLASS = 500
+NUM_TEST_SAMPLES_PER_CLASS = 800

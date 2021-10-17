@@ -1,6 +1,7 @@
 """Common helper functions."""
 from os import makedirs
 from os.path import dirname
+import pickle
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
@@ -81,10 +82,10 @@ def show_many_images(
             _ax = ax[i, j]
             _ax.axis("off")
             _ax.imshow(images[idx])
-            _ax.set_title(subtitles[idx])
+            _ax.set_title(subtitles[idx], fontsize=15)
 
     if suptitle is not None:
-        plt.suptitle(suptitle, fontsize=15, y = 1.06)
+        plt.suptitle(suptitle, fontsize=20, y = 1.06)
 
     if save is not None:
         assert save_path is not None
@@ -108,3 +109,24 @@ def mark_kps_on_image(image, kps, color=(0, 255, 0), kps_with_size=True):
         flags=flags,
     )
     return image_with_kps
+
+
+def load_pkl(path: str, encoding: str = "ascii"):
+    """Loads a .pkl file.
+    Args:
+        path (str): path to the .pkl file
+        encoding (str, optional): encoding to use for loading. Defaults to "ascii".
+    Returns:
+        Any: unpickled object
+    """
+    return pickle.load(open(path, "rb"), encoding=encoding)
+
+
+def save_pkl(data, path: str) -> None:
+    """Saves given object into .pkl file
+    Args:
+        data (Any): object to be saved
+        path (str): path to the location to be saved at
+    """
+    with open(path, 'wb') as f:
+        pickle.dump(data, f)
