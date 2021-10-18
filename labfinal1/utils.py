@@ -6,6 +6,8 @@ import numpy as np
 import cv2
 import matplotlib.pyplot as plt
 
+from constants import idx_to_class
+
 
 def show_single_image(img, figsize=(7, 5), title="Single image"):
     """Displays a single image."""
@@ -143,3 +145,39 @@ def print_update(message: str, width: int = 100, fillchar: str = ":") -> str:
     """
     message = message.center(len(message) + 2, " ")
     print("\n" + message.center(width, fillchar) + "\n")
+
+
+def plot_feature_histograms(features, labels, K=500, save=False, save_path="./results/feature_hist.png", show=True):
+    """Plots feature histogram for each class."""
+    assert len(features) == len(labels)
+    N, K = features.shape
+    x = np.arange(0, K, 1)
+
+    classes = np.sort(np.unique(labels))
+    n_classes = len(classes)
+
+    fig, ax = plt.subplots(1, n_classes, figsize=(24, 5), constrained_layout=True)
+    
+    for i, c in enumerate(classes):
+        class_indices = np.where(labels == c)
+        class_features = features[class_indices]
+        class_features = np.mean(class_features, axis=0)
+
+        ax[i].grid()
+        ax[i].bar(x=x, height=class_features, ec="cornflowerblue", fc="cornflowerblue", alpha=1.0, linewidth=1.0)
+        ax[i].set_title(idx_to_class[c].capitalize())
+
+        if i == (n_classes // 2):
+            ax[i].set_xlabel("Index of visual vocabulary (of size K)", fontsize=18)
+        
+        if i == 0:
+            ax[i].set_ylabel("Normalized frequency counts", fontsize=18)
+
+    plt.suptitle(f"Normalized Feature histograms per class for K={K}", fontsize=22)
+    if save:
+        assert save_path is not None
+        makedirs(dirname(save_path), exist_ok=True)
+        plt.savefig(save_path, bbox_inches="tight")
+
+    if show:
+        plt.show()

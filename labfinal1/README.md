@@ -8,8 +8,9 @@ In order to run through a demo, please follow the steps:
 2. Run the classifier
    ```bash
    cd /path/to/labfinal1/
-   python classify.py
+   python classify.py -n 500
    ```
+   Here, `-n 500` denotes the number of clusters to use.
 
 ### Results
 

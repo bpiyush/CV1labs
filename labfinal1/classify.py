@@ -16,7 +16,7 @@ from scipy.special import softmax
 
 from stl10_input import read_all_images, read_labels
 from constants import relevant_classes, idx_to_class, DATA_DIR, idx_to_class
-from utils import show_many_images, mark_kps_on_image, load_pkl, save_pkl, print_update
+from utils import show_many_images, mark_kps_on_image, load_pkl, save_pkl, print_update, plot_feature_histograms
 
 
 class STL:
@@ -312,7 +312,10 @@ class BoWClassifier:
 
         # show per-class histogram (aggregated across all samples in a class)
         if show_steps:
-            pass
+            plot_feature_histograms(
+                svm_features, svm_labels, K=self.n_clusters,
+                save=True, save_path=f"./results/feature_hist_K{self.n_clusters}.png",
+            )
 
         # fit SVM model per class (OneVsRest SVM model)
         ovr_svm = self.fit_svm(svm_features, svm_labels)
