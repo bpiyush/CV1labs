@@ -130,3 +130,16 @@ def save_pkl(data, path: str) -> None:
     """
     with open(path, 'wb') as f:
         pickle.dump(data, f)
+
+
+def print_update(message: str, width: int = 100, fillchar: str = ":") -> str:
+    """Prints an update message
+    Args:
+        message (str): message
+        width (int): width of new update message
+        fillchar (str): character to be filled to L and R of message
+    Returns:
+        str: print-ready update message
+    """
+    message = message.center(len(message) + 2, " ")
+    print("\n" + message.center(width, fillchar) + "\n")

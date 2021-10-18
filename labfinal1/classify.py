@@ -1,5 +1,6 @@
 """Main script to perform BoW based classification."""
 import time
+import argparse
 from os import makedirs, path
 from os.path import join, exists, isdir, dirname
 from typing import Any
@@ -15,7 +16,7 @@ from scipy.special import softmax
 
 from stl10_input import read_all_images, read_labels
 from constants import relevant_classes, idx_to_class, DATA_DIR, idx_to_class
-from utils import show_many_images, mark_kps_on_image, load_pkl, save_pkl
+from utils import show_many_images, mark_kps_on_image, load_pkl, save_pkl, print_update
 
 
 class STL:
@@ -382,3 +383,31 @@ class BoWClassifier:
 
         return class_wise_ap, accuracy, svm_features, svm_labels, svm_pred_labels
 
+
+if __name__ == "__main__":
+    # read inputs
+    parser = argparse.ArgumentParser(description="Trains a model")
+    parser.add_argument(
+        '-n', '--n_clusters',
+        default=500,
+        type=int,
+        choices=[500, 1000, 2000],
+        help='number of clusters (vocabulary size)',
+    )
+    args = parser.parse_args()
+
+    TRAIN_X_PATH = join(DATA_DIR, "train_X.bin")
+    TRAIN_y_PATH = join(DATA_DIR, "train_y.bin")
+
+    TEST_X_PATH = join(DATA_DIR, "test_X.bin")
+    TEST_y_PATH = join(DATA_DIR, "test_y.bin")
+
+    bow = BoWClassifier(n_clusters=args.n_clusters)
+
+    print_update("TRAINING")
+    bow.fit(train_data_path=TRAIN_X_PATH, train_label_path=TRAIN_y_PATH, show_steps=False)
+
+    print_update("TESTING")
+    class_wise_ap, accuracy, svm_features, svm_labels, svm_pred_labels = bow.evaluate(
+        test_data_path=TEST_X_PATH, test_label_path=TEST_y_PATH, show_steps=False,
+    )
