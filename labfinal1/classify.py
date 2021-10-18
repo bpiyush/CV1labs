@@ -11,14 +11,9 @@ from sklearn.cluster import KMeans
 from sklearn.neighbors import NearestNeighbors
 from sklearn.svm import SVC
 from sklearn.multiclass import OneVsRestClassifier
-from sklearn.metrics import average_precision_score as AP
-from sklearn.metrics import accuracy_score
-# from sklearn.preprocessing import OneHotEncoder, StandardScaler, MinMaxScaler
-from  sklearn.preprocessing import OneHotEncoder as OHE
-from sklearn.pipeline import Pipeline
 from scipy.special import softmax
 
-from stl10_input import read_single_image, read_all_images, read_labels, plot_image, keep_relevant_images
+from stl10_input import read_all_images, read_labels
 from constants import relevant_classes, idx_to_class, DATA_DIR, idx_to_class
 from utils import show_many_images, mark_kps_on_image, load_pkl, save_pkl
 
@@ -131,8 +126,8 @@ def compute_class_wise_ap(y_true, y_pred, y_scores, classes):
     """Computes AveragePrecision for every class and also the meanAP."""
     mAP = 0.0
     class_wise_ap = dict()
+
     for j, c in enumerate(classes):
-        # class_indices = (y_true == c)
 
         y_class_gt_binary = (y_true == c).astype(int)
         n_samples_in_class = np.sum(y_class_gt_binary)
@@ -145,19 +140,6 @@ def compute_class_wise_ap(y_true, y_pred, y_scores, classes):
         ap = np.multiply(y_true_class, y_true_class_cumsum)
         ap = [x / (i + 1) for i, x in enumerate(ap)]
         ap = np.sum(ap) / n_samples_in_class
-
-        # import ipdb; ipdb.set_trace()
-
-        # ap = 0.0
-        # y_pred_class_counts = 0
-        # for i, label in enumerate(y_true[indices]):
-        #     if label == c:
-        #         y_pred_class_counts += 1
-        #         ap += y_pred_class_counts / (i + 1)
-        # ap = ap / y_pred_class_counts
-
-        # y_pred_class = y_pred[indices]
-        # ap = np.sum([np.sum(y_pred_class[:i] == c) / (i + 1) if y == c else 0.0 for i, y in enumerate(y_pred_class)]) / 800
         class_wise_ap[c] = ap
 
         mAP += (ap / len(classes))
@@ -181,7 +163,6 @@ class BoWClassifier:
 
         # compute image features for training set
         self.SIFT = cv2.SIFT_create(**sift_args)
-        # self.train_data.data = self.extract_features(self.SIFT, self.train_data.data)
     
     def extract_features(self, extractor, data_dict: dict):
         images = data_dict["images"]
@@ -347,7 +328,7 @@ class BoWClassifier:
             show_topk_and_botk_results(self.train_data, svm_scores, svm_indices, relevant_classes, k=5)
         
         # part 2: quantitative evaluation
-        class_wise_ap = compute_class_wise_ap(svm_labels, svm_pred_labels, relevant_classes)
+        class_wise_ap = compute_class_wise_ap(svm_labels, svm_pred_labels, svm_scores, relevant_classes)
         results = pd.DataFrame(class_wise_ap, index=["Average Precision"])
         results = results.rename(columns={k:idx_to_class[k] for k in relevant_classes})
         print("............... SVM Trained with following results on the training set ...............")
@@ -386,15 +367,6 @@ class BoWClassifier:
             show_topk_and_botk_results(self.test_data, svm_scores, svm_indices, relevant_classes, k=5)
         
         # part 2: quantitative evaluation
-        ohe = OHE()
-        svm_ohe_labels = ohe.fit_transform(svm_labels.reshape((-1, 1))).toarray()
-        ap = AP(svm_ohe_labels, svm_scores, average=None)
-        class_wise_ap = dict()
-        for j, c in enumerate(relevant_classes):
-            class_wise_ap[idx_to_class[c]] = ap[j]
-        class_wise_ap["mean"] = np.mean(ap)
-        print(class_wise_ap)
-
         class_wise_ap = compute_class_wise_ap(svm_labels, svm_pred_labels, svm_scores, relevant_classes)
         print(class_wise_ap)
         results = pd.DataFrame(class_wise_ap, index=["Average Precision"])
