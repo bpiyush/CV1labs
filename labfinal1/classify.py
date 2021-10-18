@@ -13,7 +13,8 @@ from sklearn.svm import SVC
 from sklearn.multiclass import OneVsRestClassifier
 from sklearn.metrics import average_precision_score as AP
 from sklearn.metrics import accuracy_score
-from sklearn.preprocessing import OneHotEncoder, StandardScaler
+# from sklearn.preprocessing import OneHotEncoder, StandardScaler, MinMaxScaler
+from  sklearn.preprocessing import OneHotEncoder as OHE
 from sklearn.pipeline import Pipeline
 from scipy.special import softmax
 
@@ -126,15 +127,37 @@ def show_topk_and_botk_results(dataset, y_scores, y_indices, classes, k=5):
         )
 
 
-def compute_class_wise_ap(y_true, y_pred, classes):
+def compute_class_wise_ap(y_true, y_pred, y_scores, classes):
     """Computes AveragePrecision for every class and also the meanAP."""
     mAP = 0.0
     class_wise_ap = dict()
     for j, c in enumerate(classes):
-        class_indices = (y_true == c)
+        # class_indices = (y_true == c)
 
-        y_pred_class = y_pred[class_indices]
-        ap = np.mean([np.sum(y_pred_class[:i] == c) / (i + 1) if y == c else 0.0 for i, y in enumerate(y_pred_class)])
+        y_class_gt_binary = (y_true == c).astype(int)
+        n_samples_in_class = np.sum(y_class_gt_binary)
+
+        y_class_scores = y_scores[:, j]
+        indices = np.argsort(-y_class_scores)
+
+        y_true_class = (y_true[indices] == c).astype(int)
+        y_true_class_cumsum = np.cumsum(y_true_class)
+        ap = np.multiply(y_true_class, y_true_class_cumsum)
+        ap = [x / (i + 1) for i, x in enumerate(ap)]
+        ap = np.sum(ap) / n_samples_in_class
+
+        # import ipdb; ipdb.set_trace()
+
+        # ap = 0.0
+        # y_pred_class_counts = 0
+        # for i, label in enumerate(y_true[indices]):
+        #     if label == c:
+        #         y_pred_class_counts += 1
+        #         ap += y_pred_class_counts / (i + 1)
+        # ap = ap / y_pred_class_counts
+
+        # y_pred_class = y_pred[indices]
+        # ap = np.sum([np.sum(y_pred_class[:i] == c) / (i + 1) if y == c else 0.0 for i, y in enumerate(y_pred_class)]) / 800
         class_wise_ap[c] = ap
 
         mAP += (ap / len(classes))
@@ -332,6 +355,8 @@ class BoWClassifier:
         print(f"..... Dataset: kMeans: X {(kmc_descriptors.shape)} SVM: X ({svm_features.shape})")
         print(f"..... Hyperparameters: Number of clusters {(self.n_clusters)}")
         print(results.to_markdown())
+
+        print(f"...... Accuracy: {np.mean(svm_labels == svm_pred_labels)}")
     
     def evaluate(self, test_data_path, test_label_path, show_steps=False):
         """Runs evaluation on the test set."""
@@ -343,15 +368,17 @@ class BoWClassifier:
         self.test_data.data = self.extract_features(self.SIFT, self.test_data.data)
         
         # compute image features for test set
-        svm_indices = list(range(len(self.test_data)))
+        svm_indices = self.test_data._sample_by_attribute(attribute="labels", values=relevant_classes)
         svm_features, svm_labels = self.get_image_features(self.test_data, self.kmeans, svm_indices)
+
+        assert set(np.unique(svm_labels)) == set(relevant_classes)
 
         # evaluate SVM on the test set
         svm_scores = self.ovr_svm.decision_function(svm_features)
         svm_probes = softmax(svm_scores, axis=1)
         svm_pred_labels = np.argmax(svm_probes, axis=1)
 
-        # convert 0, 1, 2, .., 4 -> 1, 2, 3, 7, 9
+        # convert 0, 1, 2, 3, 4 -> 1, 2, 3, 7, 9
         svm_pred_labels = relevant_classes[svm_pred_labels]
 
         # part 1: qualitative evaluation
@@ -359,11 +386,23 @@ class BoWClassifier:
             show_topk_and_botk_results(self.test_data, svm_scores, svm_indices, relevant_classes, k=5)
         
         # part 2: quantitative evaluation
-        class_wise_ap = compute_class_wise_ap(svm_labels, svm_pred_labels, relevant_classes)
+        ohe = OHE()
+        svm_ohe_labels = ohe.fit_transform(svm_labels.reshape((-1, 1))).toarray()
+        ap = AP(svm_ohe_labels, svm_scores, average=None)
+        class_wise_ap = dict()
+        for j, c in enumerate(relevant_classes):
+            class_wise_ap[idx_to_class[c]] = ap[j]
+        class_wise_ap["mean"] = np.mean(ap)
+        print(class_wise_ap)
+
+        class_wise_ap = compute_class_wise_ap(svm_labels, svm_pred_labels, svm_scores, relevant_classes)
+        print(class_wise_ap)
         results = pd.DataFrame(class_wise_ap, index=["Average Precision"])
         results = results.rename(columns={k:idx_to_class[k] for k in relevant_classes})
         print("............... SVM Trained with following results on the test set ...............")
         print(f"..... Model: {self.ovr_svm}")
         print(f"..... Hyperparameters: Number of clusters {(self.n_clusters)}")
         print(results.to_markdown())
+
+        print(f"...... Accuracy: {np.mean(svm_labels == svm_pred_labels)}")
 
