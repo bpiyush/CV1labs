@@ -377,5 +377,8 @@ class BoWClassifier:
         print(f"..... Hyperparameters: Number of clusters {(self.n_clusters)}")
         print(results.to_markdown())
 
-        print(f"...... Accuracy: {np.mean(svm_labels == svm_pred_labels)}")
+        accuracy = np.mean(svm_labels == svm_pred_labels)
+        print(f"...... Accuracy: {accuracy}")
+
+        return class_wise_ap, accuracy, svm_features, svm_labels, svm_pred_labels
 
