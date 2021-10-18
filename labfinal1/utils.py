@@ -87,7 +87,7 @@ def show_many_images(
     if suptitle is not None:
         plt.suptitle(suptitle, fontsize=20, y = 1.06)
 
-    if save is not None:
+    if save:
         assert save_path is not None
         assert isinstance(save_path, str)
         makedirs(dirname(save_path), exist_ok=True)

@@ -1,6 +1,6 @@
 """Main script to perform BoW based classification."""
 import time
-from os import makedirs
+from os import makedirs, path
 from os.path import join, exists, isdir, dirname
 from typing import Any
 import numpy as np
@@ -105,7 +105,7 @@ class STL:
         )
 
 
-def show_topk_and_botk_results(dataset, y_scores, y_indices, classes, k=5):
+def show_topk_and_botk_results(dataset, y_scores, y_indices, classes, n_clusters=500, k=5):
     """Displays top-K and worst-K results based on predicted probability for each class."""
     for j, c in enumerate(classes):
         y_pred_scores = y_scores[:, j]
@@ -118,7 +118,9 @@ def show_topk_and_botk_results(dataset, y_scores, y_indices, classes, k=5):
         dataset._show_samples(
             attribute="images",
             indices=show_indices,
-            suptitle=f"Top-K (top row) and Worst-K (bottom row) predictions for class {idx_to_class[c]}",
+            suptitle=f"Top-K (top row) and Worst-K (bottom row) predictions for class: {idx_to_class[c].capitalize()}",
+            save=True,
+            save_path=f"./results/top{k}_worst{k}_K{n_clusters}_{idx_to_class[c]}.png",
         )
 
 
@@ -325,7 +327,7 @@ class BoWClassifier:
 
         # part 1: qualitative evaluation
         if show_steps:
-            show_topk_and_botk_results(self.train_data, svm_scores, svm_indices, relevant_classes, k=5)
+            show_topk_and_botk_results(self.train_data, svm_scores, svm_indices, relevant_classes, k=5, n_clusters=self.n_clusters)
         
         # part 2: quantitative evaluation
         class_wise_ap = compute_class_wise_ap(svm_labels, svm_pred_labels, svm_scores, relevant_classes)
@@ -364,11 +366,10 @@ class BoWClassifier:
 
         # part 1: qualitative evaluation
         if show_steps:
-            show_topk_and_botk_results(self.test_data, svm_scores, svm_indices, relevant_classes, k=5)
+            show_topk_and_botk_results(self.test_data, svm_scores, svm_indices, relevant_classes, n_clusters=self.n_clusters, k=5)
         
         # part 2: quantitative evaluation
         class_wise_ap = compute_class_wise_ap(svm_labels, svm_pred_labels, svm_scores, relevant_classes)
-        print(class_wise_ap)
         results = pd.DataFrame(class_wise_ap, index=["Average Precision"])
         results = results.rename(columns={k:idx_to_class[k] for k in relevant_classes})
         print("............... SVM Trained with following results on the test set ...............")
