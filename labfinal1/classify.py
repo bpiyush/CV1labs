@@ -191,6 +191,7 @@ class BoWClassifier:
             seed=0,
             n_clusters=500,
             descriptor_method="sift",
+            svm_args=dict(C=1.0),
         ):
 
         # set seed
@@ -206,6 +207,10 @@ class BoWClassifier:
             self.extractor = HoGDescriptorExtractor(**desc_method_args)
         else:
             raise ValueError("Invalid argument for descriptor_method.")
+        
+        # define SVM model
+        svm = SVC(probability=True, **svm_args)
+        self.ovr = OneVsRestClassifier(estimator=svm)
     
     def extract_features(self, extractor, data_dict: dict):
         images = data_dict["images"]
@@ -309,13 +314,7 @@ class BoWClassifier:
 
         return features, labels
     
-    def fit_svm(self, train_features, train_labels):
-        svm = SVC(C=1.0, probability=True)
-        ovr = OneVsRestClassifier(estimator=svm)
-        ovr.fit(train_features, train_labels)
-        return ovr
-    
-    def fit(self, train_data_path, train_label_path, show_steps=False):
+    def fit(self, train_data_path, train_label_path, show_steps=False, ignore_cache=False):
         """Fits kMeans and SVM as described in BoW pipeline on the training set."""
 
         # load training dataset
@@ -343,7 +342,7 @@ class BoWClassifier:
 
         # perform clustering with given indices only
         kmeans, kmc_descriptors = self.cluster_descriptors(
-            self.train_data, kmc_indices, n_clusters=self.n_clusters
+            self.train_data, kmc_indices, n_clusters=self.n_clusters, ignore_cache=ignore_cache,
         )
         self.kmeans = kmeans
 
@@ -362,11 +361,10 @@ class BoWClassifier:
             )
 
         # fit SVM model per class (OneVsRest SVM model)
-        ovr_svm = self.fit_svm(svm_features, svm_labels)
-        self.ovr_svm = ovr_svm
+        self.ovr.fit(svm_features, svm_labels)
 
         # evaluate SVM on the training set (how well has it fit?)
-        svm_scores = ovr_svm.decision_function(svm_features)
+        svm_scores = self.ovr.decision_function(svm_features)
         svm_probes = softmax(svm_scores, axis=1)
         svm_pred_labels = np.argmax(svm_probes, axis=1)
 
@@ -389,7 +387,7 @@ class BoWClassifier:
         results = pd.DataFrame(class_wise_ap, index=["Average Precision"])
         results = results.rename(columns={k:idx_to_class[k] for k in relevant_classes})
         print("............... SVM Trained with following results on the training set ...............")
-        print(f"..... Model: {ovr_svm}")
+        print(f"..... Model: {self.ovr}")
         print(f"..... Dataset: kMeans: X {(kmc_descriptors.shape)} SVM: X ({svm_features.shape})")
         print(f"..... Hyperparameters: Number of clusters {(self.n_clusters)}")
         print(results.to_markdown())
@@ -412,7 +410,7 @@ class BoWClassifier:
         assert set(np.unique(svm_labels)) == set(relevant_classes)
 
         # evaluate SVM on the test set
-        svm_scores = self.ovr_svm.decision_function(svm_features)
+        svm_scores = self.ovr.decision_function(svm_features)
         svm_probes = softmax(svm_scores, axis=1)
         svm_pred_labels = np.argmax(svm_probes, axis=1)
 
@@ -435,7 +433,7 @@ class BoWClassifier:
         results = pd.DataFrame(class_wise_ap, index=["Average Precision"])
         results = results.rename(columns={k:idx_to_class[k] for k in relevant_classes})
         print("............... SVM Trained with following results on the test set ...............")
-        print(f"..... Model: {self.ovr_svm}")
+        print(f"..... Model: {self.ovr}")
         print(f"..... Hyperparameters: Number of clusters {(self.n_clusters)}")
         print(results.to_markdown())
 
