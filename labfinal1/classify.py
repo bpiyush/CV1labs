@@ -13,6 +13,7 @@ from sklearn.neighbors import NearestNeighbors
 from sklearn.svm import SVC
 from sklearn.multiclass import OneVsRestClassifier
 from scipy.special import softmax
+from skimage.feature import hog
 
 from stl10_input import read_all_images, read_labels
 from constants import relevant_classes, idx_to_class, DATA_DIR, idx_to_class
@@ -151,21 +152,60 @@ def compute_class_wise_ap(y_true, y_pred, y_scores, classes):
     return class_wise_ap
 
 
+class SIFTDescriptorExtractor:
+    """Extension class for SIFT"""
+
+    def __init__(self, **args):
+        self.method = cv2.SIFT_create(**args)
+    
+    def __call__(self, image: np.ndarray):
+        kp, des = self.method.detectAndCompute(image, None)
+        image_with_kps = mark_kps_on_image(image, kp)
+        return {"kps": kp, "des": des, "image_with_kps": image_with_kps}
+
+
+class HoGDescriptorExtractor:
+    """Extension class for HoG that reshapes HoG feature vector."""
+
+    def __init__(self, pixels_per_cell=(16, 16), cells_per_block=(4, 4)):
+        self.method_args = dict(locals())
+        del self.method_args["self"]
+    
+    def __call__(self, image: np.ndarray):
+        hog_features = hog(image, **self.method_args)
+
+        orientations = 8
+        if "orientations" in self.method_args:
+            orientations = self.method_args["orientations"]
+
+        hog_features = hog_features.reshape((-1, orientations))
+
+        return {"kps": None, "des": hog_features, "image_with_kps": None}
+
+
 class BoWClassifier:
     """Main classifier class that brings data and model together."""
     def __init__(
             self,
-            sift_args=dict(),
+            desc_method_args=dict(),
             seed=0,
             n_clusters=500,
+            descriptor_method="sift",
         ):
 
         # set seed
         self.seed = seed
         self.n_clusters = n_clusters
+        self.descriptor_method = descriptor_method.lower()
 
-        # compute image features for training set
-        self.SIFT = cv2.SIFT_create(**sift_args)
+        # define descriptor extractor
+        if self.descriptor_method == "sift":
+            # self.extractor = cv2.SIFT_create(**desc_method_args)
+            self.extractor = SIFTDescriptorExtractor(**desc_method_args)
+        elif self.descriptor_method == "hog":
+            self.extractor = HoGDescriptorExtractor(**desc_method_args)
+        else:
+            raise ValueError("Invalid argument for descriptor_method.")
     
     def extract_features(self, extractor, data_dict: dict):
         images = data_dict["images"]
@@ -173,11 +213,11 @@ class BoWClassifier:
         image_features = dict(kps=[], des=[], images_with_kps=[])
         desc=f"Extracting image features with {type(extractor).__name__}"
         for img in tqdm(images, desc=desc, bar_format='{l_bar}{bar:10}{r_bar}{bar:-10b}'):
-            kp, des = extractor.detectAndCompute(img, None)
+            output = extractor(img)
+            image_features["kps"].append(output["kps"])
+            image_features["des"].append(output["des"])
+            image_features["images_with_kps"].append(output["image_with_kps"])
 
-            image_features["kps"].append(kp)
-            image_features["des"].append(des)
-            image_features["images_with_kps"].append(mark_kps_on_image(img, kp))
         image_features["images_with_kps"] = np.array(image_features["images_with_kps"])
         
         data_dict.update(image_features)
@@ -221,7 +261,7 @@ class BoWClassifier:
         X = np.vstack(clustering_descriptors)
 
         if path is None:
-            path = f"./checkpoints/kmeans_{n_clusters}.pkl"
+            path = f"./checkpoints/kmeans_{self.descriptor_method}_{n_clusters}.pkl"
         
         if not ignore_cache and exists(path):
             print(f"::::: Loading pre-saved k-means clustering model from {path}")
@@ -252,7 +292,11 @@ class BoWClassifier:
 
         features = np.zeros((len(indices), n_clusters))
         labels = np.zeros(len(indices))
-        for j, idx in enumerate(tqdm(indices, desc="Encoding features", bar_format='{l_bar}{bar:10}{r_bar}{bar:-10b}')):
+        iterator = tqdm(
+            indices,
+            desc="Encoding features", bar_format='{l_bar}{bar:10}{r_bar}{bar:-10b}',
+        )
+        for j, idx in enumerate(iterator):
             image_desc = dataset.data["des"][idx]
 
             if image_desc is not None:
@@ -288,7 +332,7 @@ class BoWClassifier:
             self.train_data._show_samples(attribute="images", indices=show_indices, suptitle="")
 
         # load SIFT features for training dataset (add to dataset object)
-        self.train_data.data = self.extract_features(self.SIFT, self.train_data.data)
+        self.train_data.data = self.extract_features(self.extractor, self.train_data.data)
 
         # show results of SIFT on the same chosen images
         if show_steps:
@@ -331,7 +375,14 @@ class BoWClassifier:
 
         # part 1: qualitative evaluation
         if show_steps:
-            show_topk_and_botk_results(self.train_data, svm_scores, svm_indices, relevant_classes, k=5, n_clusters=self.n_clusters)
+            show_topk_and_botk_results(
+                self.train_data,
+                svm_scores,
+                svm_indices,
+                relevant_classes,
+                n_clusters=self.n_clusters,
+                k=5,
+            )
         
         # part 2: quantitative evaluation
         class_wise_ap = compute_class_wise_ap(svm_labels, svm_pred_labels, svm_scores, relevant_classes)
@@ -352,7 +403,7 @@ class BoWClassifier:
         self.test_data = STL(test_data_path, test_label_path)
 
         # load SIFT features for test dataset (add to dataset object)
-        self.test_data.data = self.extract_features(self.SIFT, self.test_data.data)
+        self.test_data.data = self.extract_features(self.extractor, self.test_data.data)
         
         # compute image features for test set
         svm_indices = self.test_data._sample_by_attribute(attribute="labels", values=relevant_classes)
@@ -370,7 +421,14 @@ class BoWClassifier:
 
         # part 1: qualitative evaluation
         if show_steps:
-            show_topk_and_botk_results(self.test_data, svm_scores, svm_indices, relevant_classes, n_clusters=self.n_clusters, k=5)
+            show_topk_and_botk_results(
+                self.test_data,
+                svm_scores,
+                svm_indices,
+                relevant_classes,
+                n_clusters=self.n_clusters,
+                k=5,
+            )
         
         # part 2: quantitative evaluation
         class_wise_ap = compute_class_wise_ap(svm_labels, svm_pred_labels, svm_scores, relevant_classes)
@@ -397,6 +455,13 @@ if __name__ == "__main__":
         choices=[500, 1000, 2000],
         help='number of clusters (vocabulary size)',
     )
+    parser.add_argument(
+        '-d', '--descriptor_method',
+        default="sift",
+        type=str,
+        choices=["sift", "hog"],
+        help='method for extracting descriptors, e.g. SIFT',
+    )
     args = parser.parse_args()
 
     TRAIN_X_PATH = join(DATA_DIR, "train_X.bin")
@@ -405,7 +470,7 @@ if __name__ == "__main__":
     TEST_X_PATH = join(DATA_DIR, "test_X.bin")
     TEST_y_PATH = join(DATA_DIR, "test_y.bin")
 
-    bow = BoWClassifier(n_clusters=args.n_clusters)
+    bow = BoWClassifier(n_clusters=args.n_clusters, descriptor_method=args.descriptor_method)
 
     print_update("TRAINING")
     bow.fit(train_data_path=TRAIN_X_PATH, train_label_path=TRAIN_y_PATH, show_steps=False)

@@ -8,9 +8,9 @@ In order to run through a demo, please follow the steps:
 2. Run the classifier
    ```bash
    cd /path/to/labfinal1/
-   python classify.py -n 500
+   python classify.py -n 500 -d sift
    ```
-   Here, `-n 500` denotes the number of clusters to use.
+   Here, `-n 500` denotes the number of clusters to use, `-d sift` denotes using SIFT for extracting descriptors.
 
 ### Results
 
