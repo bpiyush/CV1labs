@@ -195,6 +195,7 @@ if __name__ == "__main__":
 
     # define the network (arch)
     net = TwolayerNet(num_inputs=3 * 32 * 32, num_hidden=512, num_classes=10)
+    arch = type(net).__name__
 
     # define the optimizer and scheduler
     opt = optimizer(model_params=net.parameters(), name="SGD", lr=1e-3, momentum=0.9)
@@ -205,7 +206,7 @@ if __name__ == "__main__":
 
     # train the model
     epochs, train_losses, train_metrics, test_losses, test_metrics = train(
-        net, loss_fn, train_loader, test_loader, num_epochs=2, opt=opt, sch=sch,
+        net, loss_fn, train_loader, test_loader, num_epochs=30, opt=opt, sch=sch,
     )
 
     # plot training curves
@@ -213,7 +214,7 @@ if __name__ == "__main__":
         quantities=[train_losses["loss"], test_losses["loss"]],
         time=epochs,
         labels=["Train", "Test"],
-        title="Loss curves",
+        title=f"{arch} Loss curves",
         show=False,
         save=True,
         save_path="./results/loss_plot.png",
@@ -223,7 +224,7 @@ if __name__ == "__main__":
         quantities=[train_metrics["accuracy"], test_metrics["accuracy"]],
         time=epochs,
         labels=["Train", "Test"],
-        title="Accuracy curves",
+        title=f"{arch} Accuracy curves",
         show=False,
         save=True,
         save_path="./results/accu_plot.png",
