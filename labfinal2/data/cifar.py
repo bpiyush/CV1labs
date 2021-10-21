@@ -3,6 +3,7 @@ from os.path import join
 from glob import glob
 
 import numpy as np
+import torch
 from torch.utils.data import Dataset
 
 import sys; sys.path.append("../")
@@ -43,9 +44,6 @@ class CIFAR(Dataset):
         # get sample at index = item
         img, target = self.data[item], self.targets[item]
 
-        # convert images HWC -> CHW
-        img = np.transpose(img, (2, 0, 1))
-
         # transform the input (e.g. augmentations apply here)
         if self.transform is not None:
             img = self.transform(img)
@@ -60,7 +58,8 @@ if __name__ == "__main__":
     assert len(dataset) == dataset.data.shape[0]
     assert len(dataset) == len(dataset.targets)
     img, target = dataset[0]
-    assert img.shape == (3, 32, 32)
+    print(f"Sample: x ({img.shape}), t ({target})")
+    assert img.shape == (32, 32, 3)
     assert target in list(range(10))
 
     # test dataset
@@ -69,6 +68,24 @@ if __name__ == "__main__":
     assert len(dataset) == dataset.data.shape[0]
     assert len(dataset) == len(dataset.targets)
     img, target = dataset[0]
-    assert img.shape == (3, 32, 32)
+    print(f"Sample: x ({img.shape}), t ({target})")
+    assert img.shape == (32, 32, 3)
     assert target in list(range(10))
+
+    # train dataset with transforms
+    from input_transforms import InputTransform
+    transform_list = [
+        {
+            "name": "ToTensor",
+            "args": {},
+        },
+        {
+            "name": "Normalize",
+            "args": {"mean": (0.5, 0.5, 0.5), "std": (0.5, 0.5, 0.5)},
+        },
+    ]
+    transform = InputTransform(transform_list)
+    dataset = CIFAR(root="../datasets/CIFAR-10/", train=True, transform=transform)
+    img, target = dataset[0]
+    assert img.shape == torch.Size([3, 32, 32])
 
