@@ -95,39 +95,52 @@ def show_many_images(
         plt.show()
 
 
-def plot_single_quantity_by_time(quantity, time, label, ax=None, figsize=(9, 6), title="Sample", show=False):
+def plot_single_quantity_by_time(
+        quantity, time, label, ax=None,
+        figsize=(9, 6), title="Sample", show=False, save=False, save_path=None,
+    ):
     """Plots given quantity f(t) as a function of time steps."""
     if ax is None:
         fig, ax = plt.subplots(1, 1, figsize=figsize, constrained_layout=True)
-        ax.set_title(title)
+        ax.set_title(title, fontsize=20)
         ax.grid()
 
     ax.plot(time, quantity, label=label)
 
+    plt.legend(fontsize=17)
+
+    if save:
+        assert save_path is not None
+        plt.savefig(save_path, bbox_inches="tight")
+
     if show:
-        plt.legend()
         plt.show()
 
 
 def plot_multiple_quantities_by_time(
         quantities, time: list, labels: list, ax=None, figsize=(9, 6),
-        title="Sample", show=False, xlabel="Epochs", ylabel="Loss",
+        title="Sample", show=False, xlabel="Epochs", ylabel="Loss", save=False, save_path=None,
     ):
 
     if ax is None:
         fig, ax = plt.subplots(1, 1, figsize=figsize, constrained_layout=True)
     
-    ax.set_title(title)
+    ax.set_title(title, fontsize=20)
     ax.grid()
 
     for i, qty in enumerate(quantities):
         assert len(qty) == len(time)
         ax.plot(time, qty, label=labels[i], marker="o", linewidth=2.0)
-        ax.set_xlabel(xlabel)
-        ax.set_ylabel(ylabel)
+        ax.set_xlabel(xlabel, fontsize=15)
+        ax.set_ylabel(ylabel, fontsize=15)
+
+    plt.legend(fontsize=17)
+
+    if save:
+        assert save_path is not None
+        plt.savefig(save_path, bbox_inches="tight")
 
     if show:
-        plt.legend()
         plt.show()
 
 

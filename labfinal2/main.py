@@ -214,7 +214,9 @@ if __name__ == "__main__":
         time=epochs,
         labels=["Train", "Test"],
         title="Loss curves",
-        show=True,
+        show=False,
+        save=True,
+        save_path="./results/loss_plot.png",
         ylabel="Loss",
     )
     plot_multiple_quantities_by_time(
@@ -222,6 +224,8 @@ if __name__ == "__main__":
         time=epochs,
         labels=["Train", "Test"],
         title="Accuracy curves",
-        show=True,
+        show=False,
+        save=True,
+        save_path="./results/accu_plot.png",
         ylabel="Accuracy",
     )
