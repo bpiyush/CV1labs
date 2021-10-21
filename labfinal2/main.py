@@ -84,10 +84,6 @@ def train(net, loss_fn, train_loader, test_loader, num_epochs, opt, sch=None):
     
     for epoch in range(1, num_epochs + 1):
 
-        running_loss = 0.0
-        correct = 0
-        total = 0
-
         y_true = []
         y_pred = []
 
