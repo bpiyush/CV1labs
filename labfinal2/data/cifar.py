@@ -51,10 +51,10 @@ class CIFAR(Dataset):
             fraction = train_fraction if mode == "train" else (1 - train_fraction)
             num_train_samples = int(train_fraction * num_samples)
 
-            print(f"Selecting {num_train_samples} for {mode}.")
             train_indices = np.arange(0, num_train_samples, 1)
             valid_indices = np.arange(num_train_samples, num_samples, 1)
             select_indices = train_indices if mode == "train" else valid_indices
+            print(f"Selecting {len(select_indices)} for {mode}.")
 
             self.data = self.data[select_indices]
             self.targets = self.targets[select_indices]

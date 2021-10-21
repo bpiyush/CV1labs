@@ -72,15 +72,15 @@ def evaluate(net, data_loader, loss_fn, epoch, num_epochs, mode="test"):
     return loss, accuracy
 
 
-def train(net, loss_fn, train_loader, test_loader, num_epochs, opt, sch=None):
+def train(net, loss_fn, train_loader, valid_loader, num_epochs, opt, sch=None):
     """Trains a given network on given train loader."""
     device = get_device()
 
     batch_losses = defaultdict(list)
     train_epoch_losses = defaultdict(list)
     train_epoch_metrics = defaultdict(list)
-    test_epoch_losses = defaultdict(list)
-    test_epoch_metrics = defaultdict(list)
+    valid_epoch_losses = defaultdict(list)
+    valid_epoch_metrics = defaultdict(list)
     
     epochs = list(range(1, num_epochs + 1))
     for epoch in epochs:
@@ -139,14 +139,14 @@ def train(net, loss_fn, train_loader, test_loader, num_epochs, opt, sch=None):
         train_epoch_metrics["accuracy"].append(epoch_accuracy)
 
         # compute loss and metrics on the test set
-        test_loss, test_accuracy = evaluate(net, test_loader, loss_fn, epoch, num_epochs, mode="test")
-        test_epoch_losses["loss"].append(test_loss)
-        test_epoch_metrics["accuracy"].append(test_accuracy)
+        valid_loss, valid_accuracy = evaluate(net, valid_loader, loss_fn, epoch, num_epochs, mode="valid")
+        valid_epoch_losses["loss"].append(valid_loss)
+        valid_epoch_metrics["accuracy"].append(valid_accuracy)
 
         # log epoch statistics
         print(f'TRAIN \t: Summary: Loss: {epoch_loss:.4f} Accuracy: {epoch_accuracy:.4f}')
 
-    return epochs, train_epoch_losses, train_epoch_metrics, test_epoch_losses, test_epoch_metrics
+    return epochs, train_epoch_losses, train_epoch_metrics, valid_epoch_losses, valid_epoch_metrics
 
 
 if __name__ == "__main__":
@@ -173,7 +173,7 @@ if __name__ == "__main__":
         },
     ]
     train_transform = InputTransform(train_transform_list)
-    test_transform_list = [
+    valid_transform_list = [
         {
             "name": "ToTensor",
             "args": {},
@@ -183,15 +183,15 @@ if __name__ == "__main__":
             "args": {"mean": (0.5, 0.5, 0.5), "std": (0.5, 0.5, 0.5)},
         },
     ]
-    test_transform = InputTransform(test_transform_list)
+    valid_transform = InputTransform(valid_transform_list)
 
     # define the dataset
-    train_dataset = CIFAR(root="./datasets/CIFAR-10/", train=True, transform=train_transform)
-    test_dataset = CIFAR(root="./datasets/CIFAR-10/", train=False, transform=test_transform)
+    train_dataset = CIFAR(root="./datasets/CIFAR-10/", mode="train", transform=train_transform)
+    valid_dataset = CIFAR(root="./datasets/CIFAR-10/", mode="valid", transform=valid_transform)
 
     # obtain the train dataloader
     train_loader = get_dataloader(train_dataset, train=True, batch_size=32, num_workers=1)
-    test_loader = get_dataloader(test_dataset, train=False, batch_size=32, num_workers=1)
+    valid_loader = get_dataloader(valid_dataset, train=False, batch_size=32, num_workers=1)
 
     # define the network (arch)
     net = TwolayerNet(num_inputs=3 * 32 * 32, num_hidden=512, num_classes=10)
@@ -205,15 +205,15 @@ if __name__ == "__main__":
     loss_fn = nn.CrossEntropyLoss()
 
     # train the model
-    epochs, train_losses, train_metrics, test_losses, test_metrics = train(
-        net, loss_fn, train_loader, test_loader, num_epochs=30, opt=opt, sch=sch,
+    epochs, train_losses, train_metrics, valid_losses, valid_metrics = train(
+        net, loss_fn, train_loader, valid_loader, num_epochs=30, opt=opt, sch=sch,
     )
 
     # plot training curves
     plot_multiple_quantities_by_time(
-        quantities=[train_losses["loss"], test_losses["loss"]],
+        quantities=[train_losses["loss"], valid_losses["loss"]],
         time=epochs,
-        labels=["Train", "Test"],
+        labels=["Train", "Validation"],
         title=f"{arch} Loss curves",
         show=False,
         save=True,
@@ -221,9 +221,9 @@ if __name__ == "__main__":
         ylabel="Loss",
     )
     plot_multiple_quantities_by_time(
-        quantities=[train_metrics["accuracy"], test_metrics["accuracy"]],
+        quantities=[train_metrics["accuracy"], valid_metrics["accuracy"]],
         time=epochs,
-        labels=["Train", "Test"],
+        labels=["Train", "Validation"],
         title=f"{arch} Accuracy curves",
         show=False,
         save=True,
