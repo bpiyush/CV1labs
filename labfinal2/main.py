@@ -34,7 +34,7 @@ def evaluate(net, data_loader, loss_fn, epoch, num_epochs, mode="test"):
 
     iterator = tqdm(
         data_loader,
-        f"EVALUATE: Epoch [{epoch}/{num_epochs}]", bar_format='{l_bar}{bar:30}{r_bar}{bar:-10b}',
+        f"Evaluate: Epoch [{epoch}/{num_epochs}]", bar_format='{l_bar}{bar:30}{r_bar}{bar:-10b}',
     )
     with torch.no_grad():
         for i, (images, labels) in enumerate(iterator):
@@ -82,7 +82,8 @@ def train(net, loss_fn, train_loader, test_loader, num_epochs, opt, sch=None):
     test_epoch_losses = defaultdict(list)
     test_epoch_metrics = defaultdict(list)
     
-    for epoch in range(1, num_epochs + 1):
+    epochs = list(range(1, num_epochs + 1))
+    for epoch in epochs:
 
         y_true = []
         y_pred = []
@@ -145,7 +146,7 @@ def train(net, loss_fn, train_loader, test_loader, num_epochs, opt, sch=None):
         # log epoch statistics
         print(f'TRAIN \t: Summary: Loss: {epoch_loss:.4f} Accuracy: {epoch_accuracy:.4f}')
 
-    return train_epoch_losses, train_epoch_metrics, test_epoch_losses, test_epoch_metrics
+    return epochs, train_epoch_losses, train_epoch_metrics, test_epoch_losses, test_epoch_metrics
 
 
 if __name__ == "__main__":
@@ -155,6 +156,7 @@ if __name__ == "__main__":
     from data.dataloader import get_dataloader
     from models.optimizer import optimizer, scheduler
     from networks.twolayernet import TwolayerNet
+    from utils.viz import plot_multiple_quantities_by_time
 
     # fix randomness
     fix_seed(0)
@@ -202,6 +204,24 @@ if __name__ == "__main__":
     loss_fn = nn.CrossEntropyLoss()
 
     # train the model
-    train_epoch_losses, train_epoch_metrics, test_epoch_losses, test_epoch_metrics = train(
-        net, loss_fn, train_loader, test_loader, num_epochs=10, opt=opt, sch=sch,
+    epochs, train_losses, train_metrics, test_losses, test_metrics = train(
+        net, loss_fn, train_loader, test_loader, num_epochs=2, opt=opt, sch=sch,
+    )
+
+    # plot training curves
+    plot_multiple_quantities_by_time(
+        quantities=[train_losses["loss"], test_losses["loss"]],
+        time=epochs,
+        labels=["Train", "Test"],
+        title="Loss curves",
+        show=True,
+        ylabel="Loss",
+    )
+    plot_multiple_quantities_by_time(
+        quantities=[train_metrics["accuracy"], test_metrics["accuracy"]],
+        time=epochs,
+        labels=["Train", "Test"],
+        title="Accuracy curves",
+        show=True,
+        ylabel="Accuracy",
     )
