@@ -156,6 +156,7 @@ if __name__ == "__main__":
     from data.dataloader import get_dataloader
     from models.optimizer import optimizer, scheduler
     from networks.twolayernet import TwolayerNet
+    from networks.convnet import ConvNet
     from utils.viz import plot_multiple_quantities_by_time
 
     # fix randomness
@@ -194,7 +195,8 @@ if __name__ == "__main__":
     valid_loader = get_dataloader(valid_dataset, train=False, batch_size=32, num_workers=1)
 
     # define the network (arch)
-    net = TwolayerNet(num_inputs=3 * 32 * 32, num_hidden=512, num_classes=10)
+    # net = TwolayerNet(num_inputs=3 * 32 * 32, num_hidden=512, num_classes=10)
+    net = ConvNet(in_channels=3, num_classes=10)
     arch = type(net).__name__
 
     # define the optimizer and scheduler
