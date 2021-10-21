@@ -18,6 +18,6 @@ def get_dataloader(
 if __name__ == "__main__":
     from cifar import CIFAR
 
-    dataset = CIFAR(root="../datasets/CIFAR-10/", train=True)
+    dataset = CIFAR(root="../datasets/CIFAR-10/", mode="train")
     dataloader = get_dataloader(dataset, train=True, batch_size=1)
     assert len(dataloader) == len(dataset)
