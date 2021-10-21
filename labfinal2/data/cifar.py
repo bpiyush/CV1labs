@@ -1,15 +1,8 @@
 """Defines the dataset object for CIFAR-10 dataset."""
-from os.path import join, exists
+from os.path import join
 from glob import glob
-from collections import defaultdict
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-import matplotlib.pyplot as plt
+
 import numpy as np
-import torch.optim as optim
-from math import sqrt
-from torch.utils.data import DataLoader
 from torch.utils.data import Dataset
 
 import sys; sys.path.append("../")
@@ -50,11 +43,8 @@ class CIFAR(Dataset):
         # get sample at index = item
         img, target = self.data[item], self.targets[item]
 
-        # convert to torch
-        img = torch.from_numpy(img).float()
-
         # convert images HWC -> CHW
-        img = img.permute((2, 0, 1))
+        img = np.transpose(img, (2, 0, 1))
 
         # transform the input (e.g. augmentations apply here)
         if self.transform is not None:
@@ -70,7 +60,7 @@ if __name__ == "__main__":
     assert len(dataset) == dataset.data.shape[0]
     assert len(dataset) == len(dataset.targets)
     img, target = dataset[0]
-    assert img.shape == torch.Size([3, 32, 32])
+    assert img.shape == (3, 32, 32)
     assert target in list(range(10))
 
     # test dataset
@@ -79,6 +69,6 @@ if __name__ == "__main__":
     assert len(dataset) == dataset.data.shape[0]
     assert len(dataset) == len(dataset.targets)
     img, target = dataset[0]
-    assert img.shape == torch.Size([3, 32, 32])
+    assert img.shape == (3, 32, 32)
     assert target in list(range(10))
 
