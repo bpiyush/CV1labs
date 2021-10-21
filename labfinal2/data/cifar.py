@@ -13,16 +13,22 @@ from utils.io import unpickle
 class CIFAR(Dataset):
     """Defines the CIFAR dataset class."""
 
-    def __init__(self, root, train=True, transform=None) -> None:
+    def __init__(self, root, mode="train", transform=None) -> None:
+        assert mode in ["train", "valid", "test"], \
+            "Possible values for mode: ['train', 'valid', 'test']"
+
         self.root = root
-        self.train = train
+        self.mode = mode
         self.transform = transform
 
         # load images and targets
-        self.load_data(root, train)
+        self.load_data(root, mode)
 
-    def load_data(self, root, train):
-        pattern = "data_batch_*" if train else "test_batch"
+        # sample images (split into train/valid)
+        self.select_samples(mode)
+
+    def load_data(self, root, mode):
+        pattern = "data_batch_*" if mode in ["train", "valid"] else "test_batch"
         data_pkls = glob(join(root, "cifar-10-batches-py", pattern))
 
         self.data = []
@@ -34,8 +40,24 @@ class CIFAR(Dataset):
             self.data.extend(data_dict[b"data"])
             self.targets.extend(data_dict[b"labels"])
 
+        self.targets = np.array(self.targets)
         self.data = np.vstack(self.data).reshape(-1, 3, 32, 32)
         self.data = self.data.transpose((0, 2, 3, 1))
+    
+    def select_samples(self, mode, train_fraction=0.8):
+        if mode in ["train", "valid"]:
+            num_samples = len(self.data)
+            indices = np.array(range(num_samples))
+            fraction = train_fraction if mode == "train" else (1 - train_fraction)
+            num_train_samples = int(train_fraction * num_samples)
+
+            print(f"Selecting {num_train_samples} for {mode}.")
+            train_indices = np.arange(0, num_train_samples, 1)
+            valid_indices = np.arange(num_train_samples, num_samples, 1)
+            select_indices = train_indices if mode == "train" else valid_indices
+
+            self.data = self.data[select_indices]
+            self.targets = self.targets[select_indices]
 
     def __len__(self):
         return len(self.data)
@@ -53,7 +75,7 @@ class CIFAR(Dataset):
 
 if __name__ == "__main__":
     # train dataset
-    dataset = CIFAR(root="../datasets/CIFAR-10/", train=True)
+    dataset = CIFAR(root="../datasets/CIFAR-10/", mode="train")
     print(f"Dataset images: {dataset.data.shape}")
     assert len(dataset) == dataset.data.shape[0]
     assert len(dataset) == len(dataset.targets)
@@ -61,9 +83,15 @@ if __name__ == "__main__":
     print(f"Sample: x ({img.shape}), t ({target})")
     assert img.shape == (32, 32, 3)
     assert target in list(range(10))
+    print("------")
+
+    # validation dataset
+    dataset = CIFAR(root="../datasets/CIFAR-10/", mode="valid")
+    print(f"Dataset images: {dataset.data.shape}")
+    print("------")
 
     # test dataset
-    dataset = CIFAR(root="../datasets/CIFAR-10/", train=False)
+    dataset = CIFAR(root="../datasets/CIFAR-10/", mode="test")
     print(f"Dataset images: {dataset.data.shape}")
     assert len(dataset) == dataset.data.shape[0]
     assert len(dataset) == len(dataset.targets)
@@ -71,6 +99,7 @@ if __name__ == "__main__":
     print(f"Sample: x ({img.shape}), t ({target})")
     assert img.shape == (32, 32, 3)
     assert target in list(range(10))
+    print("------")
 
     # train dataset with transforms
     from input_transforms import InputTransform
@@ -85,7 +114,7 @@ if __name__ == "__main__":
         },
     ]
     transform = InputTransform(transform_list)
-    dataset = CIFAR(root="../datasets/CIFAR-10/", train=True, transform=transform)
+    dataset = CIFAR(root="../datasets/CIFAR-10/", mode="train", transform=transform)
     img, target = dataset[0]
     assert img.shape == torch.Size([3, 32, 32])
 
