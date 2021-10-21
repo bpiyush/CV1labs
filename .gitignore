@@ -1,5 +1,6 @@
 # ignore data folder
 **/datasets/*
+labfinal1/data/*
 *.pkl
 
 # Mac
