@@ -1,6 +1,6 @@
 """Defines optimizers and schedulers for gradient descent."""
 from torch.optim import SGD, Adam, AdamW
-from torch.optim.lr_scheduler import StepLR, MultiStepLR, ExponentialLR
+from torch.optim.lr_scheduler import StepLR, MultiStepLR, ExponentialLR, CosineAnnealingLR
 
 
 def optimizer(name:str, model_params: dict, **kwargs):

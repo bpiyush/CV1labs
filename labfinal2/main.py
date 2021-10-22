@@ -125,6 +125,9 @@ def train(net, loss_fn, train_loader, valid_loader, num_epochs, opt, sch=None):
 
             y_pred.append(batch_y_pred.cpu().numpy())
             y_true.append(batch_y_true.cpu().numpy())
+        
+        if sch is not None:
+            sch.step()
 
         # aggregate batch predictions and ground-truth
         y_pred = np.concatenate(y_pred)
