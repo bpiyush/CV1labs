@@ -7,7 +7,7 @@ import torch.nn.functional as F
 class ConvNet(nn.Module):
     # Complete the code using LeNet-5
     # reference: https://ieeexplore.ieee.org/document/726791
-    def __init__(self, in_channels, num_classes):
+    def __init__(self, in_channels, num_classes, act="ReLU"):
         super(ConvNet, self).__init__()
         self.conv1 = nn.Conv2d(in_channels, out_channels = 6, kernel_size = 5, stride = 1)
         self.conv2 = nn.Conv2d(in_channels = 6, out_channels = 16, kernel_size = 5, stride = 1)
@@ -15,7 +15,7 @@ class ConvNet(nn.Module):
         self.linear2 = nn.Linear(in_features = 120, out_features = 84)
         self.linear3 = nn.Linear(in_features = 84, out_features = num_classes)
         self.pool = nn.AvgPool2d(kernel_size = 2, stride = 2)
-        self.act_fn = nn.ReLU()
+        self.act_fn = getattr(nn, act)()
         
     def forward(self, x):
         x = self.conv1(x)
