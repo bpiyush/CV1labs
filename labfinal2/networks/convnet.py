@@ -15,7 +15,7 @@ class ConvNet(nn.Module):
         self.linear2 = nn.Linear(in_features = 120, out_features = 84)
         self.linear3 = nn.Linear(in_features = 84, out_features = num_classes)
         self.pool = nn.AvgPool2d(kernel_size = 2, stride = 2)
-        self.act_fn = nn.Tanh()
+        self.act_fn = nn.ReLU()
         
     def forward(self, x):
         x = self.conv1(x)
