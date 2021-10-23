@@ -17,7 +17,7 @@ LABEL_MAP = {
 }
 
 
-class STL10Dataset(Dataset):
+class STL(Dataset):
     def __init__(self, root, mode, transform=None):
         self.root = root
         self.mode = mode
@@ -76,15 +76,15 @@ if __name__ == "__main__":
     root = "../datasets/STL-10/"
 
     # check train dataset
-    dataset = STL10Dataset(root=root, mode="train")
+    dataset = STL(root=root, mode="train")
     x, l = dataset[0]
     assert isinstance(x, np.ndarray) and isinstance(l, np.uint8)
 
     # check val dataset
-    dataset = STL10Dataset(root=root, mode="valid")
+    dataset = STL(root=root, mode="valid")
 
     # check test dataset
-    dataset = STL10Dataset(root=root, mode="test")
+    dataset = STL(root=root, mode="test")
     x, l = dataset[0]
     assert isinstance(x, np.ndarray) and isinstance(l, np.uint8)
 
