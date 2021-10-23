@@ -1,4 +1,5 @@
 """Defines ConvNet architecture."""
+from genericpath import exists
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -7,8 +8,9 @@ import torch.nn.functional as F
 class ConvNet(nn.Module):
     # Complete the code using LeNet-5
     # reference: https://ieeexplore.ieee.org/document/726791
-    def __init__(self, in_channels, num_classes, act="ReLU"):
+    def __init__(self, in_channels, num_classes, act="ReLU", ckpt_path=None):
         super(ConvNet, self).__init__()
+        self.ckpt_path = ckpt_path
         self.conv1 = nn.Conv2d(in_channels, out_channels = 6, kernel_size = 5, stride = 1)
         self.conv2 = nn.Conv2d(in_channels = 6, out_channels = 16, kernel_size = 5, stride = 1)
         self.linear1 = nn.Linear(in_features = 400, out_features = 120)
@@ -16,6 +18,8 @@ class ConvNet(nn.Module):
         self.linear3 = nn.Linear(in_features = 84, out_features = num_classes)
         self.pool = nn.AvgPool2d(kernel_size = 2, stride = 2)
         self.act_fn = getattr(nn, act)()
+
+        self.init_network(self.ckpt_path)
         
     def forward(self, x):
         x = self.conv1(x)
@@ -37,6 +41,25 @@ class ConvNet(nn.Module):
         x = self.linear3(x)
 
         return x
+    
+    def init_network(self, ckpt_path, layer_to_ignore="linear3"):
+        if ckpt_path is None:
+            return
+
+        assert exists(ckpt_path), \
+            f"Given checkpoint does not exist at {ckpt_path}"
+        
+        # load ckpt
+        ckpt = torch.load(ckpt_path, map_location="cpu")
+
+        # ignore the final layer
+        ckpt_state_dict = ckpt.state_dict()
+        keys = list(ckpt_state_dict.keys())
+        for key in keys:
+            if layer_to_ignore in key:
+                del ckpt_state_dict[key]
+
+        self.load_state_dict(ckpt_state_dict, strict=False)
 
 
 class ConvNetAdditionalLayers(nn.Module):
@@ -77,7 +100,7 @@ class ConvNetAdditionalLayers(nn.Module):
         x = self.linear2(x)
 
         return x
-    
+
 
 if __name__ == "__main__":
     num_classes = 10
@@ -90,3 +113,18 @@ if __name__ == "__main__":
     net = ConvNetAdditionalLayers(3, num_classes)
     y = net(x)
     assert y.shape == torch.Size([1, num_classes])
+
+    # test checkpoint loading
+    net = ConvNet(
+        in_channels=3,
+        num_classes=5,
+        ckpt_path="../checkpoints/cnn_best_hparams.pt",
+    )
+    nsd = net.state_dict()
+    ckpt = torch.load("../checkpoints/cnn_best_hparams.pt", map_location="cpu")
+    layer_to_ignore = "linear3"
+    csd = ckpt.state_dict()
+    for key in csd.keys():
+        if layer_to_ignore not in key:
+            assert (nsd[key] == csd[key]).all()
+
