@@ -6,7 +6,7 @@ import sys
 import os, sys, tarfile, errno
 import numpy as np
 import matplotlib.pyplot as plt
-    
+
 if sys.version_info >= (3, 0, 0):
     import urllib.request as urllib
 else:
@@ -17,7 +17,7 @@ try:
 except:
     from scipy.misc import imsave
 
-print(sys.version_info) 
+print(sys.version_info)
 
 # image shape
 HEIGHT = 96
@@ -34,10 +34,11 @@ DATA_DIR = './data'
 DATA_URL = 'http://ai.stanford.edu/~acoates/stl10/stl10_binary.tar.gz'
 
 # path to the binary train file with image data
-DATA_PATH = './data/stl10_binary/train_X.bin'
+DATA_PATH = './data/stl10_binary/test_X.bin'
 
 # path to the binary train file with labels
-LABEL_PATH = './data/stl10_binary/train_y.bin'
+LABEL_PATH = './data/stl10_binary/test_y.bin'
+
 
 def read_labels(path_to_labels):
     """
@@ -105,8 +106,10 @@ def plot_image(image):
     plt.imshow(image)
     plt.show()
 
+
 def save_image(image, name):
     imsave("%s.png" % name, image, format="png")
+
 
 def download_and_extract():
     """
@@ -121,18 +124,20 @@ def download_and_extract():
     if not os.path.exists(filepath):
         def _progress(count, block_size, total_size):
             sys.stdout.write('\rDownloading %s %.2f%%' % (filename,
-                float(count * block_size) / float(total_size) * 100.0))
+                                                          float(count * block_size) / float(total_size) * 100.0))
             sys.stdout.flush()
+
         filepath, _ = urllib.urlretrieve(DATA_URL, filepath, reporthook=_progress)
         print('Downloaded', filename)
         tarfile.open(filepath, 'r:gz').extractall(dest_directory)
 
-def save_images(images, labels):
+
+def save_images(images, labels, dir="img"):
     print("Saving images to disk")
     i = 0
     for image in images:
         label = labels[i]
-        directory = './img/' + str(label) + '/'
+        directory = f'./{dir}' + str(label) + '/'
         try:
             os.makedirs(directory, exist_ok=True)
         except OSError as exc:
@@ -141,8 +146,9 @@ def save_images(images, labels):
         filename = directory + str(i)
         print(filename)
         save_image(image, filename)
-        i = i+1
-    
+        i = i + 1
+
+
 if __name__ == "__main__":
     # download data if needed
     download_and_extract()
