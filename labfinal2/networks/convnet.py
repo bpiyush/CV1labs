@@ -8,7 +8,7 @@ import torch.nn.functional as F
 class ConvNet(nn.Module):
     # Complete the code using LeNet-5
     # reference: https://ieeexplore.ieee.org/document/726791
-    def __init__(self, in_channels, num_classes, act="ReLU", ckpt_path=None, return_features=False):
+    def __init__(self, in_channels, num_classes, act="ReLU", ckpt_path=None, return_features=False, layer_to_ignore="linear3"):
         super(ConvNet, self).__init__()
         self.ckpt_path = ckpt_path
         self.conv1 = nn.Conv2d(in_channels, out_channels = 6, kernel_size = 5, stride = 1)
@@ -20,7 +20,7 @@ class ConvNet(nn.Module):
         self.act_fn = getattr(nn, act)()
 
         self.return_features = return_features
-        self.init_network(self.ckpt_path)
+        self.init_network(self.ckpt_path, layer_to_ignore)
         
     def forward(self, x):
         x = self.conv1(x)
@@ -46,7 +46,7 @@ class ConvNet(nn.Module):
 
         return x
     
-    def init_network(self, ckpt_path, layer_to_ignore="linear3"):
+    def init_network(self, ckpt_path, layer_to_ignore):
         if ckpt_path is None:
             return
 
@@ -60,8 +60,9 @@ class ConvNet(nn.Module):
         ckpt_state_dict = ckpt.state_dict()
         keys = list(ckpt_state_dict.keys())
         for key in keys:
-            if layer_to_ignore in key:
-                del ckpt_state_dict[key]
+            if layer_to_ignore is not None:
+                if layer_to_ignore in key:
+                    del ckpt_state_dict[key]
 
         self.load_state_dict(ckpt_state_dict, strict=False)
 

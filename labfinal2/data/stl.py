@@ -16,13 +16,22 @@ LABEL_MAP = {
     9 : "ships",
 }
 
+LABEL_ENCODER = {
+    1: 0,
+    2: 1,
+    4: 2,
+    6: 3,
+    9: 4,
+}
+
 
 class STL(Dataset):
-    def __init__(self, root, mode, transform=None):
+    def __init__(self, root, mode, transform=None, encode_labels=False):
         self.root = root
         self.mode = mode
         self.train = self.mode in ["train", "valid"]
         self.transform = transform
+        self.encode_labels = encode_labels
 
         self.load_data(root, mode)
         if self.train:
@@ -43,8 +52,10 @@ class STL(Dataset):
         relevant_labels = np.array(list(LABEL_MAP.keys()))
         indices = np.where(np.in1d(self.targets, relevant_labels))[0]
         self.data = self.data[indices]
-        self.targets = self.targets[indices]
+        self.targets = self.targets[indices].astype(int)
 
+        if self.encode_labels:
+            self.targets = np.array([LABEL_ENCODER[l] for l in self.targets])
 
     def select_samples(self, train_fraction=0.8, seed=0):
         np.random.seed(seed)
