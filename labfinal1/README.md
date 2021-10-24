@@ -34,3 +34,5 @@ See the report for more results and analyses.
 ### Further experiments and analysis
 
 We perform additional analyses in notebook in the `notebooks/` folder.
+
+> Note: We do not zip the data with the submission. For part 1, data is expected to be stored at `data/stl10_binary/`. For part 2, it is expected to be stored at `datasets/CIFAR-10/` and `datasets/STL-10/` respectively.
